@@ -37,7 +37,7 @@ export function PostCard({
   tags,
 }: PostCardProps) {
   const content = (
-    <article className="rounded-lg border border-border bg-card overflow-hidden transition-colors hover:border-primary/50">
+    <article className="rounded-lg border border-border bg-card overflow-hidden transition-all duration-200 hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5 card-hover">
       {/* Post Header - Author Info */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-border">
         <div className="flex items-center gap-3">

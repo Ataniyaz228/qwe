@@ -2,6 +2,11 @@ import type React from "react"
 import type { Metadata } from "next"
 import { Geist, JetBrains_Mono } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
+import { AuthProvider } from "@/contexts/AuthContext"
+import { LanguageProvider } from "@/contexts/LanguageContext"
+import { CodeSettingsProvider } from "@/contexts/CodeSettingsContext"
+import { MobileNav } from "@/components/mobile-nav"
+import { Toaster } from "sonner"
 import "./globals.css"
 
 const _geist = Geist({ subsets: ["latin"] })
@@ -36,11 +41,29 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="ru" className="dark">
+      <head>
+        {/* Google Fonts for code blocks */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&family=Source+Code+Pro:wght@400;500;600&display=swap"
+          rel="stylesheet"
+        />
+      </head>
       <body className={`font-sans antialiased`}>
-        {children}
+        <LanguageProvider>
+          <CodeSettingsProvider>
+            <AuthProvider>
+              {children}
+              <MobileNav />
+              <Toaster position="bottom-right" theme="dark" />
+            </AuthProvider>
+          </CodeSettingsProvider>
+        </LanguageProvider>
         <Analytics />
       </body>
     </html>
   )
 }
+

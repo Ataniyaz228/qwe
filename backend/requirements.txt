@@ -1,0 +1,20 @@
+# Django Core
+Django>=5.0
+djangorestframework>=3.14
+django-cors-headers>=4.3
+
+# Authentication
+djangorestframework-simplejwt>=5.3
+dj-rest-auth>=5.0
+django-allauth>=0.58
+
+# Database
+psycopg2-binary>=2.9
+
+# Utils
+python-decouple>=3.8
+Pillow>=10.0
+django-filter>=23.5
+
+# Development
+django-extensions>=3.2

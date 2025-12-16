@@ -1,199 +1,186 @@
 "use client"
 
-import { useState } from "react"
-import { Search, Grid3X3, LayoutList, ArrowUpDown } from "lucide-react"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
+import { useState, useEffect, useMemo } from "react"
 import { Navbar } from "@/components/navbar"
 import { Sidebar } from "@/components/sidebar"
-import { TagCard } from "@/components/tag-card"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Hash, Search, TrendingUp, Grid3X3, LayoutList, Loader2, ArrowUpDown } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { tagsAPI, type Tag } from "@/lib/api"
+import { useLanguage } from "@/contexts/LanguageContext"
+import Link from "next/link"
 
-const tags = [
-  {
-    name: "JavaScript",
-    icon: "JS",
-    color: "bg-yellow-500/20 text-yellow-400",
-    snippets: 12453,
-    trending: true,
-    description: "High-level, interpreted programming language. Core technology of the web alongside HTML and CSS.",
-  },
-  {
-    name: "TypeScript",
-    icon: "TS",
-    color: "bg-blue-500/20 text-blue-400",
-    snippets: 8921,
-    trending: true,
-    description: "Strongly typed programming language that builds on JavaScript. Adds optional static typing.",
-  },
-  {
-    name: "Python",
-    icon: "PY",
-    color: "bg-green-500/20 text-green-400",
-    snippets: 10234,
-    trending: false,
-    description: "Versatile, high-level language known for readability. Popular for AI, data science, and scripting.",
-  },
-  {
-    name: "React",
-    icon: "⚛",
-    color: "bg-cyan-500/20 text-cyan-400",
-    snippets: 7845,
-    trending: true,
-    description: "JavaScript library for building user interfaces. Component-based architecture with virtual DOM.",
-  },
-  {
-    name: "Rust",
-    icon: "RS",
-    color: "bg-orange-500/20 text-orange-400",
-    snippets: 3421,
-    trending: true,
-    description:
-      "Systems programming language focused on safety and performance. Memory-safe without garbage collection.",
-  },
-  {
-    name: "Go",
-    icon: "GO",
-    color: "bg-sky-500/20 text-sky-400",
-    snippets: 4562,
-    trending: false,
-    description: "Statically typed, compiled language designed at Google. Known for simplicity and concurrency.",
-  },
-  {
-    name: "Vue",
-    icon: "V",
-    color: "bg-emerald-500/20 text-emerald-400",
-    snippets: 3124,
-    trending: false,
-    description: "Progressive JavaScript framework for building UIs. Incrementally adoptable architecture.",
-  },
-  {
-    name: "Node.js",
-    icon: "N",
-    color: "bg-lime-500/20 text-lime-400",
-    snippets: 6234,
-    trending: false,
-    description: "JavaScript runtime built on Chrome's V8 engine. Enables server-side JavaScript execution.",
-  },
-  {
-    name: "CSS",
-    icon: "{ }",
-    color: "bg-purple-500/20 text-purple-400",
-    snippets: 5678,
-    trending: false,
-    description: "Style sheet language for describing presentation of documents. Core web technology for styling.",
-  },
-  {
-    name: "SQL",
-    icon: "DB",
-    color: "bg-pink-500/20 text-pink-400",
-    snippets: 4123,
-    trending: false,
-    description: "Domain-specific language for managing relational databases. Standard for data querying.",
-  },
-  {
-    name: "Docker",
-    icon: "🐳",
-    color: "bg-blue-600/20 text-blue-300",
-    snippets: 2341,
-    trending: true,
-    description: "Platform for developing and running applications in containers. Simplifies deployment.",
-  },
-  {
-    name: "GraphQL",
-    icon: "◈",
-    color: "bg-fuchsia-500/20 text-fuchsia-400",
-    snippets: 1892,
-    trending: false,
-    description: "Query language for APIs. Provides a complete description of data and allows precise requests.",
-  },
-]
+// Цвета для тегов
+const getTagColor = (name: string): string => {
+  const colors: Record<string, string> = {
+    javascript: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
+    typescript: "bg-blue-500/20 text-blue-400 border-blue-500/30",
+    python: "bg-green-500/20 text-green-400 border-green-500/30",
+    react: "bg-cyan-500/20 text-cyan-400 border-cyan-500/30",
+    rust: "bg-orange-500/20 text-orange-400 border-orange-500/30",
+    go: "bg-sky-500/20 text-sky-400 border-sky-500/30",
+    vue: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
+    nodejs: "bg-lime-500/20 text-lime-400 border-lime-500/30",
+    css: "bg-purple-500/20 text-purple-400 border-purple-500/30",
+    html: "bg-orange-600/20 text-orange-400 border-orange-600/30",
+    sql: "bg-pink-500/20 text-pink-400 border-pink-500/30",
+    docker: "bg-blue-600/20 text-blue-300 border-blue-600/30",
+  }
+  return colors[name.toLowerCase()] || "bg-primary/10 text-primary border-primary/30"
+}
 
-const sortOptions = ["Popular", "Alphabetical", "Recent", "Trending"]
+interface TagCardProps {
+  tag: Tag
+  viewMode: "grid" | "list"
+  postsLabel: string
+}
+
+function TagCard({ tag, viewMode, postsLabel }: TagCardProps) {
+  const colorClass = getTagColor(tag.name)
+
+  if (viewMode === "list") {
+    return (
+      <Link href={`/explore?tag=${encodeURIComponent(tag.name)}`}>
+        <div className="flex items-center justify-between p-4 rounded-lg border border-border bg-card hover:border-primary/50 transition-all cursor-pointer">
+          <div className="flex items-center gap-3">
+            <div className={cn("p-2 rounded-lg", colorClass)}>
+              <Hash className="h-5 w-5" />
+            </div>
+            <div>
+              <h3 className="font-semibold">{tag.name}</h3>
+              <p className="text-sm text-muted-foreground">{tag.usage_count || 0} {postsLabel}</p>
+            </div>
+          </div>
+        </div>
+      </Link>
+    )
+  }
+
+  return (
+    <Link href={`/explore?tag=${encodeURIComponent(tag.name)}`}>
+      <div className={cn(
+        "p-4 rounded-lg border border-border bg-card hover:border-primary/50 transition-all cursor-pointer h-full",
+        colorClass
+      )}>
+        <div className="flex items-center gap-2 mb-2">
+          <Hash className="h-5 w-5" />
+          <h3 className="font-semibold">{tag.name}</h3>
+        </div>
+        <p className="text-sm text-muted-foreground">{tag.usage_count || 0} {postsLabel}</p>
+      </div>
+    </Link>
+  )
+}
 
 export default function TagsPage() {
+  const { t } = useLanguage()
+  const [tags, setTags] = useState<Tag[]>([])
+  const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
-  const [activeSort, setActiveSort] = useState("Popular")
+  const [sortBy, setSortBy] = useState<"popular" | "alphabetical">("popular")
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
 
-  const filteredTags = tags.filter((tag) => tag.name.toLowerCase().includes(searchQuery.toLowerCase()))
-
-  const sortedTags = [...filteredTags].sort((a, b) => {
-    switch (activeSort) {
-      case "Alphabetical":
-        return a.name.localeCompare(b.name)
-      case "Trending":
-        return (b.trending ? 1 : 0) - (a.trending ? 1 : 0)
-      case "Recent":
-        return 0 // Would sort by date in real app
-      default: // Popular
-        return b.snippets - a.snippets
+  useEffect(() => {
+    const fetchTags = async () => {
+      try {
+        const data = await tagsAPI.list()
+        // Handle both array and paginated response
+        if (Array.isArray(data)) {
+          setTags(data)
+        } else if (data && typeof data === 'object' && 'results' in data) {
+          setTags((data as any).results || [])
+        } else {
+          setTags([])
+        }
+      } catch (err) {
+        console.error("Error fetching tags:", err)
+        setTags([])
+      } finally {
+        setIsLoading(false)
+      }
     }
-  })
+    fetchTags()
+  }, [])
+
+  const filteredTags = useMemo(() => {
+    let result = [...tags]
+
+    // Filter by search
+    if (searchQuery) {
+      result = result.filter(tag =>
+        tag.name.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    }
+
+    // Sort
+    if (sortBy === "popular") {
+      result.sort((a, b) => (b.usage_count || 0) - (a.usage_count || 0))
+    } else {
+      result.sort((a, b) => a.name.localeCompare(b.name))
+    }
+
+    return result
+  }, [tags, searchQuery, sortBy])
 
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-
       <div className="flex">
         <Sidebar />
-
-        <main className="flex-1 ml-16 lg:ml-64 pt-20 pb-10">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6">
+        <main className="flex-1 md:ml-16 lg:ml-56">
+          <div className="mx-auto max-w-6xl px-4 py-6">
             {/* Header */}
-            <div className="mb-8">
-              <h1 className="text-3xl font-bold mb-2">Browse Tags</h1>
-              <p className="text-muted-foreground">
-                Explore code snippets by programming language, framework, or technology
-              </p>
+            <div className="mb-6">
+              <h1 className="text-2xl font-bold mb-1 flex items-center gap-2">
+                <Hash className="h-6 w-6 text-primary" />
+                {t.tags.title}
+              </h1>
+              <p className="text-muted-foreground">{t.tags.subtitle}</p>
             </div>
 
-            {/* Filters Bar */}
-            <div className="flex flex-col sm:flex-row gap-4 mb-8">
-              {/* Search */}
+            {/* Controls */}
+            <div className="flex flex-col sm:flex-row gap-4 mb-6">
               <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search tags..."
+                  placeholder={t.tags.searchPlaceholder}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 bg-secondary/50 border-border focus:bg-secondary"
+                  className="pl-10 bg-card border-border"
                 />
               </div>
-
-              {/* Sort & View */}
               <div className="flex gap-2">
-                {/* Sort Dropdown */}
-                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-secondary/50 border border-border">
-                  <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
-                  <select
-                    value={activeSort}
-                    onChange={(e) => setActiveSort(e.target.value)}
-                    className="bg-transparent text-sm outline-none cursor-pointer"
-                  >
-                    {sortOptions.map((opt) => (
-                      <option key={opt} value={opt} className="bg-card">
-                        {opt}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* View Toggle */}
-                <div className="flex rounded-lg border border-border overflow-hidden">
+                <Button
+                  variant={sortBy === "popular" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setSortBy("popular")}
+                  className="gap-1.5"
+                >
+                  <TrendingUp className="h-4 w-4" />
+                  {t.tags.popular}
+                </Button>
+                <Button
+                  variant={sortBy === "alphabetical" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setSortBy("alphabetical")}
+                  className="gap-1.5"
+                >
+                  <ArrowUpDown className="h-4 w-4" />
+                  {t.tags.alphabetical}
+                </Button>
+                <div className="border-l border-border ml-2 pl-2 flex gap-1">
                   <Button
-                    variant="ghost"
+                    variant={viewMode === "grid" ? "default" : "ghost"}
                     size="icon"
                     onClick={() => setViewMode("grid")}
-                    className={cn("rounded-none h-10 w-10", viewMode === "grid" && "bg-secondary")}
                   >
                     <Grid3X3 className="h-4 w-4" />
                   </Button>
                   <Button
-                    variant="ghost"
+                    variant={viewMode === "list" ? "default" : "ghost"}
                     size="icon"
                     onClick={() => setViewMode("list")}
-                    className={cn("rounded-none h-10 w-10", viewMode === "list" && "bg-secondary")}
                   >
                     <LayoutList className="h-4 w-4" />
                   </Button>
@@ -201,21 +188,36 @@ export default function TagsPage() {
               </div>
             </div>
 
-            {/* Tags Grid/List */}
-            <div
-              className={cn(
-                viewMode === "grid" ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" : "flex flex-col gap-3",
-              )}
-            >
-              {sortedTags.map((tag) => (
-                <TagCard key={tag.name} {...tag} />
-              ))}
-            </div>
+            {/* Loading */}
+            {isLoading && (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              </div>
+            )}
 
-            {/* Empty State */}
-            {sortedTags.length === 0 && (
-              <div className="text-center py-16">
-                <p className="text-muted-foreground">No tags found matching "{searchQuery}"</p>
+            {/* Empty state */}
+            {!isLoading && filteredTags.length === 0 && (
+              <div className="text-center py-12">
+                <Hash className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <h3 className="font-semibold mb-2">{t.common.noResults}</h3>
+              </div>
+            )}
+
+            {/* Tags Grid/List */}
+            {!isLoading && filteredTags.length > 0 && (
+              <div className={cn(
+                viewMode === "grid"
+                  ? "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4"
+                  : "flex flex-col gap-3"
+              )}>
+                {filteredTags.map((tag) => (
+                  <TagCard
+                    key={tag.id}
+                    tag={tag}
+                    viewMode={viewMode}
+                    postsLabel={t.tags.postsCount}
+                  />
+                ))}
               </div>
             )}
           </div>

@@ -15,16 +15,21 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { useToast } from "@/hooks/use-toast"
-import { Key, Shield, Download, Trash2, Eye, EyeOff, Loader2, Check, X } from "lucide-react"
+import { Key, Shield, Download, Trash2, Eye, EyeOff, Loader2, Check, X, LogOut } from "lucide-react"
+import { toast } from "sonner"
+import { useAuth } from "@/contexts/AuthContext"
+import { authAPI, postsAPI } from "@/lib/api"
+import { useRouter } from "next/navigation"
 
 export function SettingsAccount() {
-  const { toast } = useToast()
+  const router = useRouter()
+  const { user, logout } = useAuth()
   const [showCurrentPassword, setShowCurrentPassword] = useState(false)
   const [showNewPassword, setShowNewPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [savingPassword, setSavingPassword] = useState(false)
   const [exporting, setExporting] = useState(false)
+  const [loggingOut, setLoggingOut] = useState(false)
   const [passwords, setPasswords] = useState({
     current: "",
     new: "",
@@ -43,21 +48,21 @@ export function SettingsAccount() {
     if (/\d/.test(password)) score++
     if (/[^a-zA-Z0-9]/.test(password)) score++
 
-    if (score <= 1) return { score: 1, label: "Weak", color: "bg-destructive" }
-    if (score <= 2) return { score: 2, label: "Fair", color: "bg-orange-500" }
-    if (score <= 3) return { score: 3, label: "Good", color: "bg-yellow-500" }
-    if (score <= 4) return { score: 4, label: "Strong", color: "bg-green-500" }
-    return { score: 5, label: "Very Strong", color: "bg-emerald-500" }
+    if (score <= 1) return { score: 1, label: "Слабый", color: "bg-destructive" }
+    if (score <= 2) return { score: 2, label: "Средний", color: "bg-orange-500" }
+    if (score <= 3) return { score: 3, label: "Хороший", color: "bg-yellow-500" }
+    if (score <= 4) return { score: 4, label: "Сильный", color: "bg-green-500" }
+    return { score: 5, label: "Очень сильный", color: "bg-emerald-500" }
   }, [passwords.new])
 
   const passwordRequirements = useMemo(() => {
     const password = passwords.new
     return [
-      { met: password.length >= 8, label: "At least 8 characters" },
-      { met: /[A-Z]/.test(password), label: "One uppercase letter" },
-      { met: /[a-z]/.test(password), label: "One lowercase letter" },
-      { met: /\d/.test(password), label: "One number" },
-      { met: /[^a-zA-Z0-9]/.test(password), label: "One special character" },
+      { met: password.length >= 8, label: "Минимум 8 символов" },
+      { met: /[A-Z]/.test(password), label: "Одна заглавная буква" },
+      { met: /[a-z]/.test(password), label: "Одна строчная буква" },
+      { met: /\d/.test(password), label: "Одна цифра" },
+      { met: /[^a-zA-Z0-9]/.test(password), label: "Один спецсимвол" },
     ]
   }, [passwords.new])
 
@@ -65,17 +70,17 @@ export function SettingsAccount() {
     const newErrors: Record<string, string> = {}
 
     if (!passwords.current) {
-      newErrors.current = "Current password is required"
+      newErrors.current = "Введите текущий пароль"
     }
     if (!passwords.new) {
-      newErrors.new = "New password is required"
+      newErrors.new = "Введите новый пароль"
     } else if (passwords.new.length < 8) {
-      newErrors.new = "Password must be at least 8 characters"
+      newErrors.new = "Пароль должен быть минимум 8 символов"
     }
     if (!passwords.confirm) {
-      newErrors.confirm = "Please confirm your new password"
+      newErrors.confirm = "Подтвердите новый пароль"
     } else if (passwords.new !== passwords.confirm) {
-      newErrors.confirm = "Passwords do not match"
+      newErrors.confirm = "Пароли не совпадают"
     }
 
     setErrors(newErrors)
@@ -84,66 +89,76 @@ export function SettingsAccount() {
 
   const handleUpdatePassword = async () => {
     if (!validatePasswordForm()) {
-      toast({
-        title: "Validation Error",
-        description: "Please fix the errors before saving.",
-        variant: "destructive",
-      })
+      toast.error("Исправьте ошибки перед сохранением")
       return
     }
 
     setSavingPassword(true)
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-    setSavingPassword(false)
-
-    setPasswords({ current: "", new: "", confirm: "" })
-    toast({
-      title: "Password updated",
-      description: "Your password has been changed successfully.",
-    })
+    try {
+      await authAPI.changePassword(passwords.current, passwords.new, passwords.confirm)
+      setPasswords({ current: "", new: "", confirm: "" })
+      toast.success("Пароль успешно изменён!")
+    } catch (err) {
+      toast.error("Ошибка при смене пароля. Проверьте текущий пароль.")
+    } finally {
+      setSavingPassword(false)
+    }
   }
 
   const handleExportData = async () => {
     setExporting(true)
-    await new Promise((resolve) => setTimeout(resolve, 1500))
+    try {
+      // Получаем данные пользователя
+      const bookmarks = await postsAPI.bookmarks()
 
-    const userData = {
-      profile: {
-        displayName: "Alex Developer",
-        username: "alexdev",
-        email: "alex@example.com",
-        bio: "Full-stack developer passionate about clean code and open source.",
-        createdAt: "2024-01-15",
-      },
-      snippets: [
-        { id: 1, title: "React useDebounce Hook", language: "TypeScript", stars: 234 },
-        { id: 2, title: "CSS Grid Layout", language: "CSS", stars: 156 },
-        { id: 3, title: "Express Middleware", language: "JavaScript", stars: 89 },
-      ],
-      bookmarks: [
-        { id: 4, title: "Rust Error Handling", author: "rustacean" },
-        { id: 5, title: "Python Decorators", author: "pythonista" },
-      ],
-      followers: 1234,
-      following: 567,
-      exportedAt: new Date().toISOString(),
+      const userData = {
+        profile: {
+          username: user?.username,
+          email: user?.email,
+          displayName: user?.display_name,
+          bio: user?.bio,
+          website: user?.website,
+          github: user?.github,
+          location: user?.location,
+          createdAt: user?.date_joined,
+        },
+        bookmarks: bookmarks.results?.map((b: any) => ({
+          id: b.id,
+          title: b.filename || b.title,
+          language: b.language,
+        })) || [],
+        exportedAt: new Date().toISOString(),
+      }
+
+      const blob = new Blob([JSON.stringify(userData, null, 2)], { type: "application/json" })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = `gitforum-data-${new Date().toISOString().split("T")[0]}.json`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+
+      toast.success("Данные экспортированы!")
+    } catch (err) {
+      toast.error("Ошибка при экспорте данных")
+    } finally {
+      setExporting(false)
     }
+  }
 
-    const blob = new Blob([JSON.stringify(userData, null, 2)], { type: "application/json" })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement("a")
-    a.href = url
-    a.download = `gitforum-data-${new Date().toISOString().split("T")[0]}.json`
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
-
-    setExporting(false)
-    toast({
-      title: "Export complete",
-      description: "Your data has been downloaded successfully.",
-    })
+  const handleLogoutAllDevices = async () => {
+    setLoggingOut(true)
+    try {
+      await logout()
+      router.push("/")
+      toast.success("Вы вышли со всех устройств")
+    } catch (err) {
+      toast.error("Ошибка при выходе")
+    } finally {
+      setLoggingOut(false)
+    }
   }
 
   return (
@@ -152,12 +167,12 @@ export function SettingsAccount() {
       <div className="space-y-4">
         <div className="flex items-center gap-2 mb-4">
           <Key className="h-5 w-5 text-primary" />
-          <h3 className="font-semibold">Change Password</h3>
+          <h3 className="font-semibold">Смена пароля</h3>
         </div>
 
         <div className="space-y-4 max-w-md">
           <div className="space-y-2">
-            <Label htmlFor="currentPassword">Current Password</Label>
+            <Label htmlFor="currentPassword">Текущий пароль</Label>
             <div className="relative">
               <Input
                 id="currentPassword"
@@ -184,7 +199,7 @@ export function SettingsAccount() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="newPassword">New Password</Label>
+            <Label htmlFor="newPassword">Новый пароль</Label>
             <div className="relative">
               <Input
                 id="newPassword"
@@ -238,7 +253,7 @@ export function SettingsAccount() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="confirmPassword">Confirm New Password</Label>
+            <Label htmlFor="confirmPassword">Подтвердите пароль</Label>
             <div className="relative">
               <Input
                 id="confirmPassword"
@@ -264,7 +279,7 @@ export function SettingsAccount() {
             {errors.confirm && <p className="text-xs text-destructive">{errors.confirm}</p>}
             {passwords.confirm && passwords.new === passwords.confirm && !errors.confirm && (
               <p className="text-xs text-green-500 flex items-center gap-1">
-                <Check className="h-3 w-3" /> Passwords match
+                <Check className="h-3 w-3" /> Пароли совпадают
               </p>
             )}
           </div>
@@ -273,10 +288,10 @@ export function SettingsAccount() {
             {savingPassword ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Updating...
+                Сохранение...
               </>
             ) : (
-              "Update Password"
+              "Сменить пароль"
             )}
           </Button>
         </div>
@@ -286,23 +301,47 @@ export function SettingsAccount() {
       <div className="space-y-4">
         <div className="flex items-center gap-2 mb-4">
           <Shield className="h-5 w-5 text-primary" />
-          <h3 className="font-semibold">Two-Factor Authentication</h3>
+          <h3 className="font-semibold">Двухфакторная аутентификация</h3>
         </div>
 
         <div className="p-4 rounded-lg border border-border bg-card max-w-md">
           <p className="text-sm text-muted-foreground mb-4">
-            Add an extra layer of security to your account by enabling two-factor authentication.
+            Добавьте дополнительный уровень безопасности к вашему аккаунту.
           </p>
           <Button
             variant="outline"
             onClick={() => {
-              toast({
-                title: "2FA Setup",
-                description: "Two-factor authentication setup will be available soon.",
-              })
+              toast.info("2FA будет доступна в будущих обновлениях")
             }}
           >
-            Enable 2FA
+            Включить 2FA
+          </Button>
+        </div>
+      </div>
+
+      {/* Sessions */}
+      <div className="space-y-4">
+        <div className="flex items-center gap-2 mb-4">
+          <LogOut className="h-5 w-5 text-primary" />
+          <h3 className="font-semibold">Сессии</h3>
+        </div>
+
+        <div className="p-4 rounded-lg border border-border bg-card max-w-md">
+          <p className="text-sm text-muted-foreground mb-4">
+            Выйти из аккаунта на всех устройствах.
+          </p>
+          <Button
+            variant="outline"
+            className="gap-2"
+            onClick={handleLogoutAllDevices}
+            disabled={loggingOut}
+          >
+            {loggingOut ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <LogOut className="h-4 w-4" />
+            )}
+            Выйти со всех устройств
           </Button>
         </div>
       </div>
@@ -311,23 +350,23 @@ export function SettingsAccount() {
       <div className="space-y-4">
         <div className="flex items-center gap-2 mb-4">
           <Download className="h-5 w-5 text-primary" />
-          <h3 className="font-semibold">Export Data</h3>
+          <h3 className="font-semibold">Экспорт данных</h3>
         </div>
 
         <div className="p-4 rounded-lg border border-border bg-card max-w-md">
           <p className="text-sm text-muted-foreground mb-4">
-            Download a copy of your data including your snippets, bookmarks, and profile information.
+            Скачайте копию ваших данных: профиль, закладки и посты.
           </p>
           <Button variant="outline" className="gap-2 bg-transparent" onClick={handleExportData} disabled={exporting}>
             {exporting ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Exporting...
+                Экспортируем...
               </>
             ) : (
               <>
                 <Download className="h-4 w-4" />
-                Export All Data
+                Экспорт данных
               </>
             )}
           </Button>
@@ -338,43 +377,37 @@ export function SettingsAccount() {
       <div className="space-y-4">
         <div className="flex items-center gap-2 mb-4">
           <Trash2 className="h-5 w-5 text-destructive" />
-          <h3 className="font-semibold text-destructive">Danger Zone</h3>
+          <h3 className="font-semibold text-destructive">Опасная зона</h3>
         </div>
 
         <div className="p-4 rounded-lg border border-destructive/50 bg-destructive/5 max-w-md">
-          <h4 className="font-medium text-destructive mb-2">Delete Account</h4>
+          <h4 className="font-medium text-destructive mb-2">Удаление аккаунта</h4>
           <p className="text-sm text-muted-foreground mb-4">
-            Once you delete your account, there is no going back. All your snippets, bookmarks, and data will be
-            permanently removed.
+            После удаления аккаунта все ваши данные будут безвозвратно удалены.
           </p>
           <AlertDialog>
             <AlertDialogTrigger asChild>
               <Button variant="destructive" className="gap-2">
                 <Trash2 className="h-4 w-4" />
-                Delete Account
+                Удалить аккаунт
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                <AlertDialogTitle>Вы уверены?</AlertDialogTitle>
                 <AlertDialogDescription>
-                  This action cannot be undone. This will permanently delete your account and remove all your data from
-                  our servers.
+                  Это действие нельзя отменить. Все ваши данные, посты и закладки будут удалены навсегда.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogCancel>Отмена</AlertDialogCancel>
                 <AlertDialogAction
                   className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                   onClick={() => {
-                    toast({
-                      title: "Account deletion",
-                      description: "Account deletion requires backend implementation.",
-                      variant: "destructive",
-                    })
+                    toast.info("Удаление аккаунта будет доступно в будущих обновлениях")
                   }}
                 >
-                  Delete Account
+                  Удалить аккаунт
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>

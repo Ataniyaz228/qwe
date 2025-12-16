@@ -5,23 +5,30 @@
 
 /* GitForum dark theme - slate-950 base */
 :root {
-  --background: oklch(0.0941 0.0039 264.53); /* slate-950 */
-  --foreground: oklch(0.9686 0.0033 264.54); /* slate-100 */
-  --card: oklch(0.1294 0.0043 264.53); /* slate-900 */
+  --background: oklch(0.0941 0.0039 264.53);
+  /* slate-950 */
+  --foreground: oklch(0.9686 0.0033 264.54);
+  /* slate-100 */
+  --card: oklch(0.1294 0.0043 264.53);
+  /* slate-900 */
   --card-foreground: oklch(0.9686 0.0033 264.54);
   --popover: oklch(0.1294 0.0043 264.53);
   --popover-foreground: oklch(0.9686 0.0033 264.54);
-  --primary: oklch(0.5882 0.158 262.97); /* blue-500 */
+  --primary: oklch(0.5882 0.158 262.97);
+  /* blue-500 */
   --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.2078 0.0059 264.53); /* slate-800 */
+  --secondary: oklch(0.2078 0.0059 264.53);
+  /* slate-800 */
   --secondary-foreground: oklch(0.9686 0.0033 264.54);
   --muted: oklch(0.2078 0.0059 264.53);
-  --muted-foreground: oklch(0.5549 0.0157 264.53); /* slate-500 */
+  --muted-foreground: oklch(0.5549 0.0157 264.53);
+  /* slate-500 */
   --accent: oklch(0.2078 0.0059 264.53);
   --accent-foreground: oklch(0.9686 0.0033 264.54);
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(0.2078 0.0059 264.53); /* slate-800 */
+  --border: oklch(0.2078 0.0059 264.53);
+  /* slate-800 */
   --input: oklch(0.2078 0.0059 264.53);
   --ring: oklch(0.5882 0.158 262.97);
   --chart-1: oklch(0.646 0.222 41.116);
@@ -120,6 +127,7 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
@@ -142,4 +150,284 @@
 
 .code-scrollbar::-webkit-scrollbar-thumb:hover {
   background: oklch(0.3 0.0059 264.53);
+}
+
+/* Thin dark scrollbar */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: oklch(0.3 0.006 264.53);
+  border-radius: 2px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.4 0.006 264.53);
+}
+
+/* ========================================
+   ANIMATIONS & TRANSITIONS
+   ======================================== */
+
+/* Global smooth transitions */
+* {
+  transition-property: color, background-color, border-color, box-shadow, transform, opacity;
+  transition-duration: 150ms;
+  transition-timing-function: ease-out;
+}
+
+/* Card hover lift effect */
+.card-hover {
+  transition: transform 200ms ease, box-shadow 200ms ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+}
+
+/* Button press effect */
+.btn-press:active {
+  transform: scale(0.97);
+}
+
+/* Fade in animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 300ms ease-out forwards;
+}
+
+/* Slide in from left */
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-in {
+  animation: slideInLeft 300ms ease-out forwards;
+}
+
+/* Pulse animation for notifications */
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.8);
+    opacity: 1;
+  }
+
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+.animate-pulse-ring::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 50%;
+  background: var(--primary);
+  animation: pulse-ring 1.5s ease-out infinite;
+  z-index: -1;
+}
+
+/* Like heart bounce */
+@keyframes heartBounce {
+
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  25% {
+    transform: scale(1.2);
+  }
+
+  50% {
+    transform: scale(0.95);
+  }
+
+  75% {
+    transform: scale(1.1);
+  }
+}
+
+.animate-heart-bounce {
+  animation: heartBounce 400ms ease-out;
+}
+
+/* Skeleton loading shimmer */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, var(--muted) 25%, var(--border) 50%, var(--muted) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 4px;
+}
+
+/* ========================================
+   MOBILE RESPONSIVENESS
+   ======================================== */
+
+/* Mobile menu button */
+@media (max-width: 767px) {
+  .mobile-menu-btn {
+    display: flex !important;
+  }
+
+  /* Hide desktop sidebar on mobile */
+  .sidebar-desktop {
+    display: none;
+  }
+
+  /* Full width content on mobile */
+  .main-content {
+    margin-left: 0 !important;
+    width: 100% !important;
+    padding: 1rem !important;
+  }
+
+  /* Stack cards on mobile */
+  .post-card {
+    flex-direction: column;
+  }
+
+  /* Hide widgets on mobile */
+  .widgets-container {
+    display: none;
+  }
+
+  /* Mobile bottom navigation */
+  .mobile-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--card);
+    border-top: 1px solid var(--border);
+    padding: 0.5rem;
+    display: flex;
+    justify-content: space-around;
+    z-index: 50;
+  }
+}
+
+/* Tablet adjustments */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .widgets-container {
+    display: none;
+  }
+
+  .sidebar {
+    width: 64px;
+  }
+}
+
+/* Hide mobile nav on desktop */
+@media (min-width: 768px) {
+  .mobile-nav {
+    display: none !important;
+  }
+}
+
+/* ========================================
+   HOVER EFFECTS
+   ======================================== */
+
+/* Link underline effect */
+.link-hover {
+  position: relative;
+}
+
+.link-hover::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: var(--primary);
+  transition: width 200ms ease;
+}
+
+.link-hover:hover::after {
+  width: 100%;
+}
+
+/* Icon rotate on hover */
+.icon-rotate:hover {
+  transform: rotate(15deg);
+}
+
+/* Background glow effect */
+.glow-hover {
+  position: relative;
+}
+
+.glow-hover::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--primary), transparent, var(--primary));
+  opacity: 0;
+  transition: opacity 300ms ease;
+  z-index: -1;
+}
+
+.glow-hover:hover::before {
+  opacity: 0.3;
+}
+
+/* Avatar ring on hover */
+.avatar-ring:hover {
+  box-shadow: 0 0 0 2px var(--background), 0 0 0 4px var(--primary);
+}
+
+/* Code block copy button */
+.code-block:hover .copy-btn {
+  opacity: 1;
+}
+
+.copy-btn {
+  opacity: 0;
+  transition: opacity 200ms ease;
+}
+
+/* Smooth accordion/collapse */
+.accordion-content {
+  overflow: hidden;
+  transition: max-height 300ms ease, opacity 200ms ease;
 }

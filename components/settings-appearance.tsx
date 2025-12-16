@@ -1,141 +1,86 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Slider } from "@/components/ui/slider"
 import { Switch } from "@/components/ui/switch"
-import { useToast } from "@/hooks/use-toast"
-import { Monitor, Moon, Sun, Save, Loader2 } from "lucide-react"
+import { Save, Loader2, Globe, Code2, Type, Hash, Eye } from "lucide-react"
+import { toast } from "sonner"
+import { useCodeSettings, codeThemes, codeFonts } from "@/contexts/CodeSettingsContext"
+import { useLanguage } from "@/contexts/LanguageContext"
+import { CodeHighlight } from "@/components/code-highlight"
 
-const codeThemes = [
-  { value: "github-dark", label: "GitHub Dark" },
-  { value: "dracula", label: "Dracula" },
-  { value: "monokai", label: "Monokai" },
-  { value: "nord", label: "Nord" },
-  { value: "one-dark", label: "One Dark Pro" },
+// Языки интерфейса
+const languages = [
+  { value: "ru", label: "Русский" },
+  { value: "kk", label: "Қазақша" },
 ]
 
-const codeFonts = [
-  { value: "jetbrains-mono", label: "JetBrains Mono" },
-  { value: "fira-code", label: "Fira Code" },
-  { value: "source-code-pro", label: "Source Code Pro" },
-  { value: "cascadia-code", label: "Cascadia Code" },
-]
+const previewCode = `function greet(name: string) {
+  const message = \`Hello, \${name}!\`;
+  console.log(message);
+  return { success: true, name };
+}
+
+// Вызов функции
+const result = greet("World");
+console.log(result);`
 
 export function SettingsAppearance() {
-  const { toast } = useToast()
   const [saving, setSaving] = useState(false)
-  const [appearance, setAppearance] = useState({
-    theme: "dark",
-    codeTheme: "github-dark",
-    codeFont: "jetbrains-mono",
-    fontSize: 14,
-    lineNumbers: true,
-    wordWrap: false,
-  })
-
-  useEffect(() => {
-    const savedTheme = localStorage.getItem("gitforum-theme")
-    const savedAppearance = localStorage.getItem("gitforum-appearance")
-
-    if (savedTheme) {
-      setAppearance((prev) => ({ ...prev, theme: savedTheme }))
-    }
-    if (savedAppearance) {
-      try {
-        const parsed = JSON.parse(savedAppearance)
-        setAppearance((prev) => ({ ...prev, ...parsed }))
-      } catch (e) {
-        // Ignore parse errors
-      }
-    }
-  }, [])
-
-  const applyTheme = (theme: string) => {
-    const root = document.documentElement
-
-    if (theme === "system") {
-      const systemDark = window.matchMedia("(prefers-color-scheme: dark)").matches
-      root.classList.toggle("dark", systemDark)
-    } else {
-      root.classList.toggle("dark", theme === "dark")
-    }
-
-    localStorage.setItem("gitforum-theme", theme)
-  }
-
-  const handleThemeChange = (theme: string) => {
-    setAppearance({ ...appearance, theme })
-    applyTheme(theme)
-  }
+  const { settings, updateSettings } = useCodeSettings()
+  const { language, setLanguage } = useLanguage()
 
   const handleSave = async () => {
     setSaving(true)
-    await new Promise((resolve) => setTimeout(resolve, 800))
-
-    localStorage.setItem(
-      "gitforum-appearance",
-      JSON.stringify({
-        codeTheme: appearance.codeTheme,
-        codeFont: appearance.codeFont,
-        fontSize: appearance.fontSize,
-        lineNumbers: appearance.lineNumbers,
-        wordWrap: appearance.wordWrap,
-      }),
-    )
-
+    await new Promise((resolve) => setTimeout(resolve, 300))
     setSaving(false)
-    toast({
-      title: "Preferences saved",
-      description: "Your appearance settings have been updated.",
-    })
+    toast.success("Настройки сохранены!")
   }
 
   return (
     <div className="space-y-8">
-      {/* Theme Selection */}
-      <div className="space-y-4">
+      {/* Language Selection */}
+      <div className="space-y-4 p-5 rounded-xl bg-card border border-border">
         <div>
-          <h3 className="font-semibold mb-1">Theme</h3>
-          <p className="text-sm text-muted-foreground">Select your preferred color scheme</p>
+          <h3 className="font-semibold mb-1 flex items-center gap-2">
+            <Globe className="h-4 w-4 text-primary" />
+            Язык интерфейса
+          </h3>
+          <p className="text-sm text-muted-foreground">Выберите предпочитаемый язык</p>
         </div>
-        <RadioGroup value={appearance.theme} onValueChange={handleThemeChange} className="grid grid-cols-3 gap-4">
-          {[
-            { value: "light", label: "Light", icon: Sun },
-            { value: "dark", label: "Dark", icon: Moon },
-            { value: "system", label: "System", icon: Monitor },
-          ].map((option) => (
-            <Label
-              key={option.value}
-              htmlFor={option.value}
-              className={`flex flex-col items-center gap-2 p-4 rounded-lg border-2 cursor-pointer transition-colors ${
-                appearance.theme === option.value
-                  ? "border-primary bg-primary/10"
-                  : "border-border bg-card hover:border-muted-foreground/50"
-              }`}
+        <div className="flex gap-3">
+          {languages.map((lang) => (
+            <button
+              key={lang.value}
+              onClick={() => setLanguage(lang.value as "ru" | "kk")}
+              className={`flex items-center gap-2 px-5 py-3 rounded-xl border-2 transition-all font-medium ${language === lang.value
+                ? "border-primary bg-primary/10 text-primary"
+                : "border-border bg-background hover:border-muted-foreground/50 hover:bg-muted/50"
+                }`}
             >
-              <RadioGroupItem value={option.value} id={option.value} className="sr-only" />
-              <option.icon className="h-6 w-6" />
-              <span className="text-sm font-medium">{option.label}</span>
-            </Label>
+              {lang.label}
+            </button>
           ))}
-        </RadioGroup>
+        </div>
       </div>
 
       {/* Code Editor Theme */}
-      <div className="space-y-3">
+      <div className="space-y-4 p-5 rounded-xl bg-card border border-border">
         <div>
-          <h3 className="font-semibold mb-1">Code Theme</h3>
-          <p className="text-sm text-muted-foreground">Syntax highlighting theme for code blocks</p>
+          <h3 className="font-semibold mb-1 flex items-center gap-2">
+            <Code2 className="h-4 w-4 text-primary" />
+            Тема кода
+          </h3>
+          <p className="text-sm text-muted-foreground">Подсветка синтаксиса для блоков кода</p>
         </div>
         <Select
-          value={appearance.codeTheme}
-          onValueChange={(value) => setAppearance({ ...appearance, codeTheme: value })}
+          value={settings.theme}
+          onValueChange={(value) => updateSettings({ theme: value })}
         >
-          <SelectTrigger className="w-full max-w-xs bg-card border-border">
+          <SelectTrigger className="w-full max-w-sm bg-background border-border">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -149,22 +94,27 @@ export function SettingsAppearance() {
       </div>
 
       {/* Code Font */}
-      <div className="space-y-3">
+      <div className="space-y-4 p-5 rounded-xl bg-card border border-border">
         <div>
-          <h3 className="font-semibold mb-1">Code Font</h3>
-          <p className="text-sm text-muted-foreground">Font family for code snippets</p>
+          <h3 className="font-semibold mb-1 flex items-center gap-2">
+            <Type className="h-4 w-4 text-primary" />
+            Шрифт кода
+          </h3>
+          <p className="text-sm text-muted-foreground">Моноширинный шрифт для блоков кода</p>
         </div>
         <Select
-          value={appearance.codeFont}
-          onValueChange={(value) => setAppearance({ ...appearance, codeFont: value })}
+          value={settings.font}
+          onValueChange={(value) => updateSettings({ font: value })}
         >
-          <SelectTrigger className="w-full max-w-xs bg-card border-border">
+          <SelectTrigger className="w-full max-w-sm bg-background border-border">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
             {codeFonts.map((font) => (
               <SelectItem key={font.value} value={font.value}>
-                {font.label}
+                <span style={{ fontFamily: font.value === "consolas" ? "Consolas" : font.label }}>
+                  {font.label}
+                </span>
               </SelectItem>
             ))}
           </SelectContent>
@@ -172,80 +122,125 @@ export function SettingsAppearance() {
       </div>
 
       {/* Font Size */}
-      <div className="space-y-3">
+      <div className="space-y-4 p-5 rounded-xl bg-card border border-border">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="font-semibold mb-1">Font Size</h3>
-            <p className="text-sm text-muted-foreground">Code editor font size</p>
+            <h3 className="font-semibold mb-1">Размер шрифта</h3>
+            <p className="text-sm text-muted-foreground">
+              Размер текста в блоках кода
+            </p>
           </div>
-          <span className="text-sm font-mono bg-card px-2 py-1 rounded border border-border">
-            {appearance.fontSize}px
+          <span className="font-mono text-lg font-bold text-primary bg-primary/10 px-3 py-1 rounded-lg">
+            {settings.fontSize}px
           </span>
         </div>
         <Slider
-          value={[appearance.fontSize]}
-          onValueChange={(value) => setAppearance({ ...appearance, fontSize: value[0] })}
+          value={[settings.fontSize]}
+          onValueChange={([value]) => updateSettings({ fontSize: value })}
           min={10}
           max={24}
           step={1}
-          className="max-w-xs"
+          className="max-w-md"
         />
-      </div>
-
-      {/* Code Preview */}
-      <div className="space-y-3">
-        <h3 className="font-semibold">Preview</h3>
-        <div
-          className="rounded-lg border border-border bg-[#0d1117] p-4 max-w-lg overflow-x-auto"
-          style={{ fontSize: `${appearance.fontSize}px` }}
-        >
-          <pre className="font-mono text-[#c9d1d9]">
-            {appearance.lineNumbers && <span className="text-[#484f58] mr-4 select-none">1</span>}
-            <span className="text-[#ff7b72]">function</span> <span className="text-[#d2a8ff]">greet</span>
-            <span className="text-[#c9d1d9]">(</span>
-            <span className="text-[#ffa657]">name</span>
-            <span className="text-[#c9d1d9]">)</span>
-            <span className="text-[#c9d1d9]">{" {"}</span>
-            {"\n"}
-            {appearance.lineNumbers && <span className="text-[#484f58] mr-4 select-none">2</span>}
-            {"  "}
-            <span className="text-[#ff7b72]">return</span> <span className="text-[#a5d6ff]">{"`Hello, ${name}!`"}</span>
-            <span className="text-[#c9d1d9]">;</span>
-            {"\n"}
-            {appearance.lineNumbers && <span className="text-[#484f58] mr-4 select-none">3</span>}
-            <span className="text-[#c9d1d9]">{"}"}</span>
-          </pre>
+        <div className="flex justify-between text-xs text-muted-foreground max-w-md">
+          <span>Мелкий (10px)</span>
+          <span>Крупный (24px)</span>
         </div>
       </div>
 
-      {/* Toggles */}
-      <div className="space-y-4">
+      {/* Line Height */}
+      <div className="space-y-4 p-5 rounded-xl bg-card border border-border">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="font-semibold">Line Numbers</h3>
-            <p className="text-sm text-muted-foreground">Show line numbers in code blocks</p>
+            <h3 className="font-semibold mb-1">Межстрочный интервал</h3>
+            <p className="text-sm text-muted-foreground">
+              Отступ между строками кода
+            </p>
           </div>
-          <Switch
-            checked={appearance.lineNumbers}
-            onCheckedChange={(checked) => setAppearance({ ...appearance, lineNumbers: checked })}
-          />
+          <span className="font-mono text-lg font-bold text-primary bg-primary/10 px-3 py-1 rounded-lg">
+            {settings.lineHeight}
+          </span>
         </div>
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="font-semibold">Word Wrap</h3>
-            <p className="text-sm text-muted-foreground">Wrap long lines in code blocks</p>
+        <Slider
+          value={[settings.lineHeight * 10]}
+          onValueChange={([value]) => updateSettings({ lineHeight: value / 10 })}
+          min={10}
+          max={20}
+          step={1}
+          className="max-w-md"
+        />
+        <div className="flex justify-between text-xs text-muted-foreground max-w-md">
+          <span>Компактно (1.0)</span>
+          <span>Просторно (2.0)</span>
+        </div>
+      </div>
+
+      {/* Editor Settings */}
+      <div className="space-y-4 p-5 rounded-xl bg-card border border-border">
+        <div>
+          <h3 className="font-semibold mb-1 flex items-center gap-2">
+            <Hash className="h-4 w-4 text-primary" />
+            Настройки редактора
+          </h3>
+          <p className="text-sm text-muted-foreground">Дополнительные опции отображения кода</p>
+        </div>
+        <div className="space-y-5">
+          <div className="flex items-center justify-between p-4 rounded-lg bg-background border border-border/50">
+            <div>
+              <Label className="font-medium">Номера строк</Label>
+              <p className="text-sm text-muted-foreground">Показывать номера строк слева</p>
+            </div>
+            <Switch
+              checked={settings.lineNumbers}
+              onCheckedChange={(checked) => updateSettings({ lineNumbers: checked })}
+            />
           </div>
-          <Switch
-            checked={appearance.wordWrap}
-            onCheckedChange={(checked) => setAppearance({ ...appearance, wordWrap: checked })}
+          <div className="flex items-center justify-between p-4 rounded-lg bg-background border border-border/50">
+            <div>
+              <Label className="font-medium">Перенос строк</Label>
+              <p className="text-sm text-muted-foreground">Автоматический перенос длинных строк</p>
+            </div>
+            <Switch
+              checked={settings.wordWrap}
+              onCheckedChange={(checked) => updateSettings({ wordWrap: checked })}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Live Preview */}
+      <div className="space-y-4 p-5 rounded-xl bg-card border border-border">
+        <div>
+          <h3 className="font-semibold mb-1 flex items-center gap-2">
+            <Eye className="h-4 w-4 text-primary" />
+            Предпросмотр
+          </h3>
+          <p className="text-sm text-muted-foreground">Так будет выглядеть код с текущими настройками</p>
+        </div>
+        <div className="rounded-xl border border-border overflow-hidden">
+          <CodeHighlight
+            code={previewCode}
+            language="typescript"
           />
         </div>
       </div>
 
-      <Button className="gap-2" onClick={handleSave} disabled={saving}>
-        {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-        {saving ? "Saving..." : "Save Preferences"}
-      </Button>
+      {/* Save Button */}
+      <div className="flex justify-start pt-2">
+        <Button onClick={handleSave} disabled={saving} size="lg" className="min-w-[160px]">
+          {saving ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Сохранение...
+            </>
+          ) : (
+            <>
+              <Save className="mr-2 h-4 w-4" />
+              Сохранить настройки
+            </>
+          )}
+        </Button>
+      </div>
     </div>
   )
 }
