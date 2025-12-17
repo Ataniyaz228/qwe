@@ -4,83 +4,86 @@ import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Code, TrendingUp, Bookmark, Hash, Users, FileCode, Star, Zap, Share2, Search } from "lucide-react"
-
-const features = [
-  {
-    icon: Code,
-    title: "Syntax Highlighting",
-    description: "Beautiful code rendering with VS Code-like themes for 50+ languages",
-  },
-  {
-    icon: TrendingUp,
-    title: "Trending Snippets",
-    description: "Discover the hottest code snippets trending in the community",
-  },
-  {
-    icon: Hash,
-    title: "Smart Tags",
-    description: "Organize and find code by language, framework, or topic",
-  },
-  {
-    icon: Bookmark,
-    title: "Bookmarks",
-    description: "Save your favorite snippets for quick access later",
-  },
-  {
-    icon: Share2,
-    title: "Easy Sharing",
-    description: "Share code snippets with a single click, no screenshots needed",
-  },
-  {
-    icon: Search,
-    title: "Powerful Search",
-    description: "Find exactly what you need with advanced code search",
-  },
-]
-
-const steps = [
-  {
-    number: "01",
-    title: "Create",
-    description: "Write or paste your code with full syntax highlighting support",
-  },
-  {
-    number: "02",
-    title: "Share",
-    description: "Publish your snippet and share it with the developer community",
-  },
-  {
-    number: "03",
-    title: "Discover",
-    description: "Explore trending code, learn from others, and grow together",
-  },
-]
-
-const stats = [
-  { value: "50K+", label: "Developers" },
-  { value: "120K+", label: "Code Snippets" },
-  { value: "45+", label: "Languages" },
-  { value: "1M+", label: "Lines Shared" },
-]
+import { useLanguage } from "@/contexts/LanguageContext"
 
 export default function LandingPage() {
+  const { t } = useLanguage()
+
+  const features = [
+    {
+      icon: Code,
+      title: t.landing.features.syntaxHighlighting,
+      description: t.landing.features.syntaxHighlightingDesc,
+    },
+    {
+      icon: TrendingUp,
+      title: t.landing.features.trendingSnippets,
+      description: t.landing.features.trendingSnippetsDesc,
+    },
+    {
+      icon: Hash,
+      title: t.landing.features.smartTags,
+      description: t.landing.features.smartTagsDesc,
+    },
+    {
+      icon: Bookmark,
+      title: t.landing.features.bookmarks,
+      description: t.landing.features.bookmarksDesc,
+    },
+    {
+      icon: Share2,
+      title: t.landing.features.easySharing,
+      description: t.landing.features.easySharingDesc,
+    },
+    {
+      icon: Search,
+      title: t.landing.features.powerfulSearch,
+      description: t.landing.features.powerfulSearchDesc,
+    },
+  ]
+
+  const steps = [
+    {
+      number: "01",
+      title: t.landing.howItWorks.step1,
+      description: t.landing.howItWorks.step1Desc,
+    },
+    {
+      number: "02",
+      title: t.landing.howItWorks.step2,
+      description: t.landing.howItWorks.step2Desc,
+    },
+    {
+      number: "03",
+      title: t.landing.howItWorks.step3,
+      description: t.landing.howItWorks.step3Desc,
+    },
+  ]
+
+  const stats = [
+    { value: "50K+", label: t.landing.stats.developers },
+    { value: "120K+", label: t.landing.stats.snippets },
+    { value: "45+", label: t.landing.stats.languages },
+    { value: "1M+", label: t.landing.stats.linesShared },
+  ]
+
   return (
     <div className="min-h-screen bg-background">
       {/* Navbar */}
       <header className="sticky top-0 z-50 w-full border-b border-border bg-card/80 backdrop-blur-md">
         <div className="flex h-14 items-center justify-between px-4 md:px-6 max-w-7xl mx-auto">
           <div className="flex items-center gap-2">
-            <Image src="/gitforum-logo.svg" alt="GitForum" width={32} height={32} className="h-8 w-8" />
+            <Image src="/gitforum-logo.png" alt="GitForum" width={32} height={32} className="h-8 w-8" />
             <span className="text-lg font-semibold tracking-tight">GitForum</span>
           </div>
           <div className="flex items-center gap-3">
             <Link href="/login">
               <Button variant="ghost" size="sm">
-                Log in
+                {t.nav.login}
               </Button>
             </Link>
             <Link href="/register">
-              <Button size="sm">Sign up</Button>
+              <Button size="sm">{t.nav.register}</Button>
             </Link>
           </div>
         </div>
@@ -92,29 +95,22 @@ export default function LandingPage() {
         <div className="relative mx-auto max-w-7xl px-4 md:px-6 text-center">
           <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-1.5 text-sm mb-6">
             <Zap className="h-4 w-4 text-yellow-500" />
-            <span className="text-muted-foreground">Share code, not screenshots</span>
+            <span className="text-muted-foreground">{t.landing.tagline}</span>
           </div>
           <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-balance mb-6">
-            The Home for{" "}
+            {t.landing.heroTitle}{" "}
             <span className="bg-gradient-to-r from-primary to-sky-400 bg-clip-text text-transparent">
-              Developer Code
+              {t.landing.heroTitleHighlight}
             </span>
           </h1>
           <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 text-balance">
-            Share beautiful code snippets, discover trending solutions, and connect with developers worldwide. No more
-            messy screenshots - just clean, syntax-highlighted code.
+            {t.landing.heroDescription}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/register">
               <Button size="lg" className="gap-2 w-full sm:w-auto">
                 <FileCode className="h-5 w-5" />
-                Get Started Free
-              </Button>
-            </Link>
-            <Link href="/explore">
-              <Button size="lg" variant="outline" className="gap-2 w-full sm:w-auto bg-transparent">
-                <Search className="h-5 w-5" />
-                Explore Snippets
+                {t.landing.getStarted}
               </Button>
             </Link>
           </div>
@@ -150,7 +146,7 @@ export default function LandingPage() {
                       <span className="text-yellow-300">useDebounce</span>
                       {"<"}
                       <span className="text-sky-300">T</span>
-                      {">"}(value: <span className="text-sky-300">T</span>, delay:{" "}
+                      {">"} (value: <span className="text-sky-300">T</span>, delay:{" "}
                       <span className="text-sky-300">number</span>): <span className="text-sky-300">T</span> {"{"}
                     </span>
                     <span>
@@ -176,9 +172,9 @@ export default function LandingPage() {
       <section className="py-20 border-t border-border">
         <div className="mx-auto max-w-7xl px-4 md:px-6">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Everything you need to share code</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">{t.landing.features.title}</h2>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              Built by developers, for developers. All the tools you need in one place.
+              {t.landing.features.subtitle}
             </p>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -202,8 +198,8 @@ export default function LandingPage() {
       <section className="py-20 border-t border-border bg-secondary/20">
         <div className="mx-auto max-w-7xl px-4 md:px-6">
           <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">How it works</h2>
-            <p className="text-muted-foreground text-lg">Three simple steps to share your code</p>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">{t.landing.howItWorks.title}</h2>
+            <p className="text-muted-foreground text-lg">{t.landing.howItWorks.subtitle}</p>
           </div>
           <div className="grid md:grid-cols-3 gap-8">
             {steps.map((step, index) => (
@@ -241,16 +237,16 @@ export default function LandingPage() {
         <div className="mx-auto max-w-7xl px-4 md:px-6 text-center">
           <div className="inline-flex items-center gap-2 mb-4">
             <Users className="h-5 w-5 text-primary" />
-            <span className="text-muted-foreground">Join 50,000+ developers</span>
+            <span className="text-muted-foreground">{t.landing.cta.joinDevelopers}</span>
           </div>
-          <h2 className="text-3xl md:text-4xl font-bold mb-4 text-balance">Ready to share your code?</h2>
+          <h2 className="text-3xl md:text-4xl font-bold mb-4 text-balance">{t.landing.cta.readyToShare}</h2>
           <p className="text-muted-foreground text-lg max-w-xl mx-auto mb-8">
-            Sign up today and start sharing beautiful code snippets with the world.
+            {t.landing.cta.signUpToday}
           </p>
           <Link href="/register">
             <Button size="lg" className="gap-2">
               <Star className="h-5 w-5" />
-              Create Free Account
+              {t.landing.cta.createAccount}
             </Button>
           </Link>
         </div>
@@ -261,24 +257,24 @@ export default function LandingPage() {
         <div className="mx-auto max-w-7xl px-4 md:px-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2">
-              <Image src="/gitforum-logo.svg" alt="GitForum" width={24} height={24} className="h-6 w-6" />
+              <Image src="/gitforum-logo.png" alt="GitForum" width={24} height={24} className="h-6 w-6" />
               <span className="font-semibold">GitForum</span>
             </div>
             <div className="flex items-center gap-6 text-sm text-muted-foreground">
               <Link href="#" className="hover:text-foreground transition-colors">
-                About
+                {t.landing.footer.about}
               </Link>
               <Link href="#" className="hover:text-foreground transition-colors">
-                Privacy
+                {t.landing.footer.privacy}
               </Link>
               <Link href="#" className="hover:text-foreground transition-colors">
-                Terms
+                {t.landing.footer.terms}
               </Link>
               <Link href="#" className="hover:text-foreground transition-colors">
-                Contact
+                {t.landing.footer.contact}
               </Link>
             </div>
-            <p className="text-sm text-muted-foreground">© 2025 GitForum. All rights reserved.</p>
+            <p className="text-sm text-muted-foreground">{t.landing.footer.copyright}</p>
           </div>
         </div>
       </footer>

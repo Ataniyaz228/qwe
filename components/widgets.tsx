@@ -22,14 +22,14 @@ export function Widgets() {
     setLoading(true)
     try {
       const [trending, contributors] = await Promise.all([
-        postsAPI.trending(),
+        postsAPI.trending('week', true), // widget=true: только с лайками, макс 3
         usersAPI.topContributors()
       ])
       // Обработка разных форматов ответа API
-      const trendingArray = Array.isArray(trending) ? trending : (trending.results || [])
-      const contributorsArray = Array.isArray(contributors) ? contributors : (contributors.results || [])
+      const trendingArray = Array.isArray(trending) ? trending : ((trending as unknown as { results: Post[] }).results || [])
+      const contributorsArray = Array.isArray(contributors) ? contributors : ((contributors as unknown as { results: User[] }).results || [])
 
-      setTrendingPosts(trendingArray.slice(0, 3))
+      setTrendingPosts(trendingArray) // backend уже вернёт максимум 3
       setTopContributors(contributorsArray.slice(0, 5))
     } catch (err) {
       console.error("Error loading widgets:", err)

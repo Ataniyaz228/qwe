@@ -248,7 +248,7 @@ class UserPostsView(generics.ListAPIView):
 
 
 class TrendingPostsView(generics.ListAPIView):
-    """Трендовые посты сегодня (с лайками > 0, максимум 3)"""
+    """Трендовые посты за период (последние 24ч/7 дней/30 дней)"""
     serializer_class = PostListSerializer
     permission_classes = [permissions.AllowAny]
     
@@ -256,14 +256,31 @@ class TrendingPostsView(generics.ListAPIView):
         from django.utils import timezone
         from datetime import timedelta
         
-        # Посты за сегодня (с начала дня)
-        today_start = timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
+        # Получаем параметры из query params
+        period = self.request.query_params.get('period', 'week')  # По умолчанию неделя
+        widget = self.request.query_params.get('widget', 'false').lower() == 'true'
         
-        return Post.objects.filter(
+        now = timezone.now()
+        
+        # Относительные периоды (последние N часов/дней)
+        if period == 'week':
+            since = now - timedelta(days=7)
+        elif period == 'month':
+            since = now - timedelta(days=30)
+        else:  # today = последние 24 часа
+            since = now - timedelta(hours=24)
+        
+        queryset = Post.objects.filter(
             is_public=True,
-            created_at__gte=today_start,
-            likes_count__gt=0  # Только посты с лайками
-        ).select_related('author').prefetch_related('tags').order_by('-likes_count', '-views')[:3]
+            created_at__gte=since
+        )
+        
+        # Для виджета - только посты с лайками, максимум 3
+        if widget:
+            queryset = queryset.filter(likes_count__gt=0)
+            return queryset.select_related('author').prefetch_related('tags').order_by('-likes_count', '-views')[:3]
+        
+        return queryset.select_related('author').prefetch_related('tags').order_by('-likes_count', '-views', '-created_at')[:20]
 
 
 class TagListView(generics.ListAPIView):

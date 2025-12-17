@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge"
 import { postsAPI, type Post } from "@/lib/api"
 import { useAuth } from "@/contexts/AuthContext"
 import { toast } from "sonner"
+import { CodeHighlight } from "@/components/code-highlight"
 
 interface APIPostCardProps {
     post: Post
@@ -120,10 +121,11 @@ export function APIPostCard({ post, onUpdate }: APIPostCardProps) {
 
     const langColorClass = languageColors[post.language] || "bg-gray-500/20 text-gray-400 border-gray-500/30"
 
-    // Ограничиваем код до 15 строк для превью
-    const codeLines = (post.code || "").split("\n")
-    const displayCode = codeLines.slice(0, 15).join("\n")
-    const hasMoreCode = codeLines.length > 15
+    // Используем code_preview из списка или полный code из деталей (max 6 строк)
+    const codeToShow = post.code_preview || post.code || ""
+    const codeLines = codeToShow.split("\n")
+    const displayCode = codeLines.slice(0, 6).join("\n")
+    const hasMoreCode = codeLines.length > 6
 
     return (
         <Link href={`/post/${post.id}`} className="block">
@@ -176,17 +178,21 @@ export function APIPostCard({ post, onUpdate }: APIPostCardProps) {
                     </Badge>
                 </div>
 
-                {/* Code Block */}
-                <div className="overflow-x-auto code-scrollbar bg-[#0d1117]">
-                    <pre className="p-4 font-mono text-sm leading-relaxed">
-                        <code className="text-gray-300">{displayCode}</code>
-                    </pre>
-                    {hasMoreCode && (
-                        <div className="px-4 pb-3 text-xs text-muted-foreground">
-                            ... ещё {codeLines.length - 15} строк
-                        </div>
-                    )}
-                </div>
+                {/* Code Block with Syntax Highlighting */}
+                {displayCode && (
+                    <div className="overflow-hidden max-h-40">
+                        <CodeHighlight
+                            code={displayCode}
+                            language={post.language || "text"}
+                            showLineNumbers={false}
+                        />
+                        {hasMoreCode && (
+                            <div className="px-4 py-2 text-xs text-muted-foreground bg-secondary/30 border-t border-border">
+                                ... ещё код
+                            </div>
+                        )}
+                    </div>
+                )}
 
                 {/* Tags */}
                 {post.tags && post.tags.length > 0 && (

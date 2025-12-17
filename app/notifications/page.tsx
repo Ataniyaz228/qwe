@@ -65,7 +65,7 @@ export default function NotificationsPage() {
   // Редирект если не авторизован
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
-      router.push("/auth/login")
+      router.push("/login")
     }
   }, [isAuthenticated, authLoading, router])
 

@@ -38,6 +38,7 @@ export interface Post {
     filename: string;
     language: string;
     code?: string;
+    code_preview?: string;
     description: string;
     is_public: boolean;
     tags: Tag[];
@@ -416,8 +417,10 @@ export const postsAPI = {
     /**
      * Трендовые посты
      */
-    trending: async (): Promise<Post[]> => {
-        return fetchAPI<Post[]>('/trending/');
+    trending: async (period: 'today' | 'week' | 'month' = 'week', widget: boolean = false): Promise<Post[]> => {
+        const params = new URLSearchParams({ period });
+        if (widget) params.append('widget', 'true');
+        return fetchAPI<Post[]>(`/trending/?${params.toString()}`);
     },
 
     /**

@@ -217,13 +217,12 @@ export default function ExplorePage() {
 
   // Статистика
   const stats = useMemo(() => {
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-    const weekAgo = new Date(today)
-    weekAgo.setDate(weekAgo.getDate() - 7)
+    const now = Date.now()
+    const last24h = now - 24 * 60 * 60 * 1000  // последние 24 часа
+    const last7days = now - 7 * 24 * 60 * 60 * 1000  // последние 7 дней
 
-    const todayPosts = posts.filter(p => new Date(p.created_at || 0) >= today)
-    const weekPosts = posts.filter(p => new Date(p.created_at || 0) >= weekAgo)
+    const todayPosts = posts.filter(p => new Date(p.created_at || 0).getTime() >= last24h)
+    const weekPosts = posts.filter(p => new Date(p.created_at || 0).getTime() >= last7days)
     const trendingCount = posts.filter(p => (p.likes_count || 0) > 0 || (p.views || 0) > 10).length
 
     return {

@@ -164,8 +164,9 @@ export default function TrendingPage() {
     const fetchTrending = async () => {
       setIsLoading(true)
       try {
-        const data = await postsAPI.trending()
-        setPosts(Array.isArray(data) ? data : data.results || [])
+        const period = activeTime as 'today' | 'week' | 'month'
+        const data = await postsAPI.trending(period)
+        setPosts(Array.isArray(data) ? data : (data as unknown as { results: Post[] }).results || [])
       } catch (err) {
         console.error("Error fetching trending:", err)
         setError("Ошибка загрузки")
@@ -174,7 +175,7 @@ export default function TrendingPage() {
       }
     }
     fetchTrending()
-  }, [])
+  }, [activeTime])
 
   // Получаем уникальные языки из постов
   const languages = useMemo(() => {
@@ -183,10 +184,11 @@ export default function TrendingPage() {
   }, [posts])
 
   const filteredAndSortedPosts = useMemo(() => {
-    const now = new Date()
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-    const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000)
-    const monthAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000)
+    // Относительные периоды (последние N часов/дней)
+    const now = Date.now()
+    const last24h = now - 24 * 60 * 60 * 1000
+    const last7days = now - 7 * 24 * 60 * 60 * 1000
+    const last30days = now - 30 * 24 * 60 * 60 * 1000
 
     let filtered = posts.filter((post) => {
       const matchesSearch =
@@ -198,14 +200,15 @@ export default function TrendingPage() {
       const matchesLanguage = activeLanguage === "All" ||
         post.language?.toLowerCase() === activeLanguage.toLowerCase()
 
-      const postDate = new Date(post.created_at || 0)
+      // Backend уже фильтрует по периоду, но для надёжности проверяем на клиенте
+      const postTime = new Date(post.created_at || 0).getTime()
       let matchesTime = true
       if (activeTime === "today") {
-        matchesTime = postDate >= today
+        matchesTime = postTime >= last24h  // последние 24 часа
       } else if (activeTime === "week") {
-        matchesTime = postDate >= weekAgo
+        matchesTime = postTime >= last7days  // последние 7 дней
       } else if (activeTime === "month") {
-        matchesTime = postDate >= monthAgo
+        matchesTime = postTime >= last30days  // последние 30 дней
       }
 
       return matchesSearch && matchesLanguage && matchesTime
@@ -233,8 +236,8 @@ export default function TrendingPage() {
       <Navbar />
       <Sidebar />
 
-      <main className="pt-14 md:pl-16 lg:pl-56">
-        <div className="container max-w-4xl mx-auto px-4 py-8">
+      <main className="pt-5 md:pl-16 lg:pl-68">
+        <div className="max-w-5xl px-6 md:px-8 lg:px-10 py-6">
           {/* Header */}
           <div className="mb-8">
             <div className="flex items-center gap-3 mb-2">

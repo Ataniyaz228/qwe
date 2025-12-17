@@ -63,6 +63,7 @@ class PostListSerializer(serializers.ModelSerializer):
     tags = TagSerializer(many=True, read_only=True)
     is_liked = serializers.SerializerMethodField()
     is_bookmarked = serializers.SerializerMethodField()
+    code_preview = serializers.SerializerMethodField()
     
     class Meta:
         model = Post
@@ -81,6 +82,7 @@ class PostListSerializer(serializers.ModelSerializer):
             'created_at',
             'is_liked',
             'is_bookmarked',
+            'code_preview',
         ]
         read_only_fields = fields
     
@@ -95,6 +97,12 @@ class PostListSerializer(serializers.ModelSerializer):
         if request and request.user.is_authenticated:
             return Bookmark.objects.filter(user=request.user, post=obj).exists()
         return False
+    
+    def get_code_preview(self, obj):
+        """Возвращает первые 500 символов кода для превью"""
+        if obj.code:
+            return obj.code[:500]
+        return ""
 
 
 class PostDetailSerializer(serializers.ModelSerializer):

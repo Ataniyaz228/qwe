@@ -11,6 +11,7 @@ interface AuthContextType {
     register: (username: string, email: string, password: string) => Promise<void>;
     logout: () => Promise<void>;
     refreshUser: () => Promise<void>;
+    setTokensAndLoad: (access: string, refresh: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -96,6 +97,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
     };
 
+    // Установить токены и загрузить пользователя (для OAuth)
+    const setTokensAndLoad = async (access: string, refresh: string) => {
+        setTokens({ access, refresh });
+        setIsLoading(true);
+        try {
+            const userData = await authAPI.getCurrentUser();
+            setUser(userData);
+        } catch (error) {
+            console.error('Ошибка загрузки пользователя после OAuth:', error);
+            clearTokens();
+            setUser(null);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     return (
         <AuthContext.Provider
             value={{
@@ -106,6 +123,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 register,
                 logout,
                 refreshUser,
+                setTokensAndLoad,
             }}
         >
             {children}

@@ -18,8 +18,9 @@ urlpatterns = [
     path('api/auth/', include('dj_rest_auth.urls')),
     path('api/auth/registration/', include('dj_rest_auth.registration.urls')),
     
-    # OAuth Social Login
+    # OAuth Social Login - включаем все allauth URLs
     path('api/auth/social/', include('allauth.socialaccount.urls')),
+    path('accounts/', include('allauth.urls')),  # Нужно для провайдеров
 ]
 
 # Для загрузки медиа файлов в режиме разработки

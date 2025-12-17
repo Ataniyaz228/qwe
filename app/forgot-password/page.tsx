@@ -53,7 +53,7 @@ function ForgotPasswordContent() {
             <div className="flex-1 flex items-center justify-center p-8">
                 <div className="w-full max-w-md">
                     <Link href="/" className="inline-flex items-center gap-2 mb-8">
-                        <Image src="/gitforum-logo.svg" alt="GitForum" width={32} height={32} />
+                        <Image src="/gitforum-logo.png" alt="GitForum" width={32} height={32} />
                         <span className="text-lg font-semibold tracking-tight">GitForum</span>
                     </Link>
 

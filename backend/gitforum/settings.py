@@ -69,6 +69,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'allauth.account.middleware.AccountMiddleware',
+    'users.middleware.OAuthRedirectMiddleware',  # OAuth JWT redirect
 ]
 
 ROOT_URLCONF = 'gitforum.urls'
@@ -248,6 +249,10 @@ ACCOUNT_UNIQUE_EMAIL = True
 ACCOUNT_USER_MODEL_USERNAME_FIELD = 'username'
 ACCOUNT_USER_MODEL_EMAIL_FIELD = 'email'
 
+# OAuth redirects
+LOGIN_REDIRECT_URL = 'http://localhost:3000/feed'
+SOCIALACCOUNT_LOGIN_ON_GET = True  # Пропускаем страницу подтверждения
+
 # ===================
 # dj-rest-auth Settings
 # ===================
@@ -262,19 +267,25 @@ REST_AUTH = {
 # ===================
 # OAuth Providers
 # ===================
+# Note: OAuth apps are stored in database (SocialApp model)
+# Use: python manage.py setup_oauth to configure them
+
 SOCIALACCOUNT_PROVIDERS = {
     'google': {
-        'APP': {
-            'client_id': config('GOOGLE_CLIENT_ID', default=''),
-            'secret': config('GOOGLE_CLIENT_SECRET', default=''),
-        },
         'SCOPE': ['profile', 'email'],
+        'AUTH_PARAMS': {'access_type': 'online'},
     },
     'github': {
-        'APP': {
-            'client_id': config('GITHUB_CLIENT_ID', default=''),
-            'secret': config('GITHUB_CLIENT_SECRET', default=''),
-        },
         'SCOPE': ['user:email', 'read:user'],
     },
 }
+
+# Social Account Adapter для привязки аккаунтов по email
+SOCIALACCOUNT_ADAPTER = 'users.adapters.GitForumSocialAccountAdapter'
+SOCIALACCOUNT_AUTO_SIGNUP = True
+SOCIALACCOUNT_EMAIL_REQUIRED = True
+SOCIALACCOUNT_QUERY_EMAIL = True
+
+# Frontend URL для OAuth callback
+FRONTEND_URL = config('FRONTEND_URL', default='http://localhost:3000')
+

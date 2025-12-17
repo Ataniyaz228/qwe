@@ -82,7 +82,7 @@ export function Navbar() {
       <div className="flex h-14 items-center justify-between px-4 md:px-6">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2">
-          <Image src="/gitforum-logo.svg" alt="GitForum" width={32} height={32} />
+          <Image src="/gitforum-logo.png" alt="GitForum" width={32} height={32} />
           <span className="text-lg font-semibold tracking-tight">GitForum</span>
         </Link>
 

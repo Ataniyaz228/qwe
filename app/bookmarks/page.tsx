@@ -185,7 +185,7 @@ export default function BookmarksPage() {
     if (authLoading) return
 
     if (!isAuthenticated) {
-      router.push("/auth/login")
+      router.push("/login")
       return
     }
 
@@ -245,8 +245,8 @@ export default function BookmarksPage() {
       <Navbar />
       <div className="flex">
         <Sidebar />
-        <main className="flex-1 md:ml-16 lg:ml-56">
-          <div className="mx-auto max-w-5xl px-4 py-6">
+        <main className="flex-1 md:ml-16 lg:ml-68">
+          <div className="max-w-6xl px-4 py-6">
             {/* Header */}
             <div className="flex items-center justify-between mb-6">
               <div>

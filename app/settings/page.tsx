@@ -29,7 +29,7 @@ export default function SettingsPage() {
   // Редирект если не авторизован
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
-      router.push("/auth/login")
+      router.push("/login")
     }
   }, [isAuthenticated, isLoading, router])
 

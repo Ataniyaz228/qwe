@@ -3,8 +3,14 @@ URL маршруты для пользователей
 """
 from django.urls import path
 from . import views
+from .oauth_views import OAuthCallbackView, OAuthInitiateView, OAuthUserInfoView
 
 urlpatterns = [
+    # OAuth
+    path('oauth/initiate/<str:provider>/', OAuthInitiateView.as_view(), name='oauth-initiate'),
+    path('oauth/callback/<str:provider>/', OAuthCallbackView.as_view(), name='oauth-callback'),
+    path('oauth/connected/', OAuthUserInfoView.as_view(), name='oauth-connected'),
+    
     # Поиск пользователей (должен быть до username/)
     path('search/', views.UserSearchView.as_view(), name='user-search'),
     
@@ -25,3 +31,4 @@ urlpatterns = [
     path('<str:username>/followers/', views.UserFollowersView.as_view(), name='user-followers'),
     path('<str:username>/following/', views.UserFollowingView.as_view(), name='user-following'),
 ]
+
