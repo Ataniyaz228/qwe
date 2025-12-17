@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useParams, useRouter } from "next/navigation"
 import Link from "next/link"
 import { Navbar } from "@/components/navbar"
@@ -11,24 +11,24 @@ import { usePost } from "@/hooks/usePosts"
 import { useAuth } from "@/contexts/AuthContext"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import {
   Heart, MessageSquare, Share2, Bookmark,
-  Eye, ArrowLeft, Loader2, Copy, Check, Pencil, Trash2, AlertCircle
+  Eye, ArrowLeft, Loader2, Copy, Check, Pencil, Trash2, AlertCircle,
+  FileCode, Clock, Hash, ExternalLink
 } from "lucide-react"
 import { toast } from "sonner"
 import { postsAPI } from "@/lib/api"
+import { cn } from "@/lib/utils"
 
-// Цвета языков
-const languageColors: Record<string, string> = {
-  javascript: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
-  typescript: "bg-blue-500/20 text-blue-400 border-blue-500/30",
-  python: "bg-green-500/20 text-green-400 border-green-500/30",
-  rust: "bg-orange-500/20 text-orange-400 border-orange-500/30",
-  go: "bg-cyan-500/20 text-cyan-400 border-cyan-500/30",
-  java: "bg-red-500/20 text-red-400 border-red-500/30",
-  csharp: "bg-purple-500/20 text-purple-400 border-purple-500/30",
-  cpp: "bg-pink-500/20 text-pink-400 border-pink-500/30",
+const languageColors: Record<string, { bg: string; dot: string }> = {
+  javascript: { bg: "from-yellow-500/20 to-yellow-600/10", dot: "bg-yellow-400" },
+  typescript: { bg: "from-blue-500/20 to-blue-600/10", dot: "bg-blue-400" },
+  python: { bg: "from-green-500/20 to-green-600/10", dot: "bg-green-400" },
+  rust: { bg: "from-orange-500/20 to-orange-600/10", dot: "bg-orange-400" },
+  go: { bg: "from-cyan-500/20 to-cyan-600/10", dot: "bg-cyan-400" },
+  java: { bg: "from-red-500/20 to-red-600/10", dot: "bg-red-400" },
+  csharp: { bg: "from-purple-500/20 to-purple-600/10", dot: "bg-purple-400" },
+  cpp: { bg: "from-pink-500/20 to-pink-600/10", dot: "bg-pink-400" },
 }
 
 function formatDate(dateString: string): string {
@@ -41,6 +41,20 @@ function formatDate(dateString: string): string {
   })
 }
 
+function formatRelativeDate(dateString: string): string {
+  const date = new Date(dateString)
+  const now = new Date()
+  const diffMs = now.getTime() - date.getTime()
+  const diffMins = Math.floor(diffMs / 60000)
+  const diffHours = Math.floor(diffMs / 3600000)
+  const diffDays = Math.floor(diffMs / 86400000)
+
+  if (diffMins < 60) return `${diffMins} мин назад`
+  if (diffHours < 24) return `${diffHours} ч назад`
+  if (diffDays < 7) return `${diffDays} дн назад`
+  return formatDate(dateString)
+}
+
 export default function PostPage() {
   const params = useParams()
   const router = useRouter()
@@ -50,8 +64,14 @@ export default function PostPage() {
 
   const [copied, setCopied] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const isAuthor = user && post && user.username === post.author.username
+  const color = post ? (languageColors[post.language?.toLowerCase()] || { bg: "from-white/5 to-white/[0.02]", dot: "bg-white/40" }) : { bg: "", dot: "" }
 
   const handleCopyCode = () => {
     if (post?.code) {
@@ -73,11 +93,8 @@ export default function PostPage() {
       return
     }
     try {
-      if (post?.is_liked) {
-        await unlike()
-      } else {
-        await like()
-      }
+      if (post?.is_liked) await unlike()
+      else await like()
     } catch {
       toast.error("Ошибка")
     }
@@ -102,37 +119,31 @@ export default function PostPage() {
   }
 
   const handleDelete = async () => {
-    console.log("handleDelete called, deleting directly...")
-    // Подтверждение через confirm блокируется браузером
-    // TODO: добавить модальное окно для подтверждения
     setIsDeleting(true)
     try {
-      console.log("Calling API delete for:", postId)
       await postsAPI.delete(postId)
-      console.log("Delete successful")
       toast.success("Пост удалён")
       router.push("/feed")
     } catch (err) {
-      console.error("Delete error:", err)
       toast.error("Ошибка удаления")
     } finally {
       setIsDeleting(false)
     }
   }
 
-  const langColorClass = post ? (languageColors[post.language] || "bg-gray-500/20 text-gray-400") : ""
-
   // Loading State
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-[#09090b]">
         <Navbar />
         <div className="flex">
           <Sidebar />
           <main className="flex-1 md:ml-16 lg:ml-56 flex items-center justify-center min-h-[60vh]">
             <div className="flex flex-col items-center gap-4">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              <p className="text-muted-foreground">Загрузка поста...</p>
+              <div className="h-12 w-12 rounded-2xl bg-white/[0.04] border border-white/[0.06] flex items-center justify-center">
+                <Loader2 className="h-5 w-5 animate-spin text-white/40" />
+              </div>
+              <p className="text-sm text-white/30">Загрузка поста...</p>
             </div>
           </main>
         </div>
@@ -143,19 +154,21 @@ export default function PostPage() {
   // Error State
   if (error || !post) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-[#09090b]">
         <Navbar />
         <div className="flex">
           <Sidebar />
           <main className="flex-1 md:ml-16 lg:ml-56 flex items-center justify-center min-h-[60vh]">
             <div className="flex flex-col items-center gap-4 text-center">
-              <AlertCircle className="h-12 w-12 text-destructive" />
-              <h2 className="text-xl font-bold">Пост не найден</h2>
-              <p className="text-muted-foreground">Возможно, он был удалён или у вас нет доступа</p>
+              <div className="h-16 w-16 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center">
+                <AlertCircle className="h-7 w-7 text-red-400" strokeWidth={1.5} />
+              </div>
+              <h2 className="text-lg font-medium text-white/70">Пост не найден</h2>
+              <p className="text-sm text-white/35">Возможно, он был удалён</p>
               <Link href="/feed">
-                <Button variant="outline" className="gap-2">
-                  <ArrowLeft className="h-4 w-4" />
-                  Вернуться в ленту
+                <Button variant="outline" className="gap-2 bg-white/[0.02] border-white/[0.06] text-white/60 hover:bg-white/[0.05] rounded-xl">
+                  <ArrowLeft className="h-4 w-4" strokeWidth={1.5} />
+                  Вернуться
                 </Button>
               </Link>
             </div>
@@ -166,93 +179,114 @@ export default function PostPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-[#09090b]">
+      {/* Background */}
+      <div className="fixed inset-0 pointer-events-none">
+        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-white/[0.008] rounded-full blur-[150px]" />
+        <div className="absolute bottom-0 right-1/3 w-[500px] h-[500px] bg-white/[0.008] rounded-full blur-[150px]" />
+      </div>
+
       <Navbar />
       <div className="flex">
         <Sidebar />
-        <main className="flex-1 md:ml-16 lg:ml-56">
+        <main className="flex-1 md:ml-16 lg:ml-56 relative z-10">
           <div className="mx-auto max-w-4xl px-4 py-6">
             {/* Back Button */}
             <Link
               href="/feed"
-              className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-6"
+              className={cn(
+                "inline-flex items-center gap-1.5 text-sm text-white/40 hover:text-white/70 mb-6 transition-all duration-500",
+                mounted ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-4"
+              )}
             >
-              <ArrowLeft className="h-4 w-4" />
+              <ArrowLeft className="h-4 w-4" strokeWidth={1.5} />
               Назад в ленту
             </Link>
 
-            <article className="rounded-lg border border-border bg-card overflow-hidden">
+            <article className={cn(
+              "rounded-2xl border border-white/[0.04] bg-[#0c0c0e] overflow-hidden transition-all duration-500 delay-100",
+              mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+            )}>
               {/* Author Header */}
-              <div className="flex items-center justify-between px-6 py-4 border-b border-border">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.04]">
                 <div className="flex items-center gap-3">
                   <Link href={`/user/${post.author.username}`}>
-                    <Avatar className="h-10 w-10">
+                    <Avatar className="h-11 w-11 border-2 border-white/[0.08] transition-all hover:border-white/[0.15]">
                       <AvatarImage src={post.author.avatar || "/developer-avatar.png"} />
-                      <AvatarFallback>
+                      <AvatarFallback className="bg-white/[0.04] text-white/40">
                         {post.author.display_name?.[0] || post.author.username[0]}
                       </AvatarFallback>
                     </Avatar>
                   </Link>
                   <div>
-                    <Link href={`/user/${post.author.username}`} className="font-medium hover:underline">
+                    <Link href={`/user/${post.author.username}`} className="font-medium text-white/80 hover:text-white transition-colors">
                       {post.author.display_name || post.author.username}
                     </Link>
-                    <p className="text-sm text-muted-foreground">
-                      @{post.author.username} · {formatDate(post.created_at)}
+                    <p className="text-xs text-white/35 flex items-center gap-1.5">
+                      <span>@{post.author.username}</span>
+                      <span className="text-white/20">·</span>
+                      <Clock className="h-3 w-3" strokeWidth={1.5} />
+                      <span>{formatRelativeDate(post.created_at)}</span>
                     </p>
                   </div>
                 </div>
 
                 {isAuthor && (
-                  <div className="flex items-center gap-2 relative z-50">
-                    <Button variant="ghost" size="sm" className="gap-1" asChild>
-                      <Link href={`/post/${post.id}/edit`}>
-                        <Pencil className="h-4 w-4" />
-                        Редактировать
-                      </Link>
-                    </Button>
-                    <button
-                      type="button"
-                      className="inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md"
-                      onClick={() => {
-                        console.log("Delete clicked")
-                        handleDelete()
-                      }}
+                  <div className="flex items-center gap-2">
+                    <Link href={`/post/${post.id}/edit`}>
+                      <Button variant="ghost" size="sm" className="gap-1.5 text-white/40 hover:text-white/70 hover:bg-white/[0.04] rounded-lg">
+                        <Pencil className="h-4 w-4" strokeWidth={1.5} />
+                        Изменить
+                      </Button>
+                    </Link>
+                    <Button
+                      size="sm"
+                      className="gap-1.5 bg-red-500/20 text-red-400 hover:bg-red-500/30 border border-red-500/30 rounded-lg"
+                      onClick={handleDelete}
                       disabled={isDeleting}
                     >
-                      <Trash2 className="h-4 w-4" />
-                      {isDeleting ? "Удаление..." : "Удалить"}
-                    </button>
+                      <Trash2 className="h-4 w-4" strokeWidth={1.5} />
+                      {isDeleting ? "..." : "Удалить"}
+                    </Button>
                   </div>
                 )}
               </div>
 
               {/* Title & Description */}
-              <div className="px-6 py-4 border-b border-border">
-                <h1 className="text-2xl font-bold mb-2">{post.title}</h1>
+              <div className="px-6 py-5 border-b border-white/[0.04]">
+                <h1 className="text-xl font-semibold text-white/90 mb-2">{post.title}</h1>
                 {post.description && (
-                  <p className="text-muted-foreground">{post.description}</p>
+                  <p className="text-sm text-white/40 leading-relaxed">{post.description}</p>
                 )}
               </div>
 
               {/* Code Block */}
-              <div className="border-b border-border">
+              <div className="border-b border-white/[0.04]">
                 {/* File Header */}
-                <div className="flex items-center justify-between bg-secondary/50 px-4 py-2 border-b border-border">
-                  <div className="flex items-center gap-2">
+                <div className="flex items-center justify-between bg-white/[0.02] px-4 py-3 border-b border-white/[0.04]">
+                  <div className="flex items-center gap-3">
                     <div className="flex gap-1.5">
-                      <span className="h-3 w-3 rounded-full bg-red-500/80" />
-                      <span className="h-3 w-3 rounded-full bg-yellow-500/80" />
-                      <span className="h-3 w-3 rounded-full bg-green-500/80" />
+                      <span className="h-3 w-3 rounded-full bg-white/[0.08]" />
+                      <span className="h-3 w-3 rounded-full bg-white/[0.08]" />
+                      <span className="h-3 w-3 rounded-full bg-white/[0.08]" />
                     </div>
-                    <span className="ml-2 font-mono text-sm text-muted-foreground">{post.filename}</span>
+                    <div className="flex items-center gap-2">
+                      <FileCode className="h-4 w-4 text-white/30" strokeWidth={1.5} />
+                      <span className="font-mono text-sm text-white/50">{post.filename}</span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline" className={`font-mono text-xs ${langColorClass}`}>
-                      {post.language}
-                    </Badge>
-                    <Button variant="ghost" size="sm" onClick={handleCopyCode} className="gap-1">
-                      {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-white/[0.04]">
+                      <span className={cn("h-2 w-2 rounded-full", color.dot)} />
+                      <span className="text-xs font-mono text-white/50">{post.language}</span>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleCopyCode}
+                      className="gap-1.5 text-white/40 hover:text-white/70 hover:bg-white/[0.04] rounded-lg"
+                    >
+                      {copied ? <Check className="h-4 w-4 text-green-400" strokeWidth={2} /> : <Copy className="h-4 w-4" strokeWidth={1.5} />}
                       {copied ? "Скопировано" : "Копировать"}
                     </Button>
                   </div>
@@ -264,12 +298,13 @@ export default function PostPage() {
 
               {/* Tags */}
               {post.tags && post.tags.length > 0 && (
-                <div className="flex flex-wrap gap-2 px-6 py-4 border-b border-border">
+                <div className="flex flex-wrap gap-2 px-6 py-4 border-b border-white/[0.04]">
+                  <Hash className="h-4 w-4 text-white/20" strokeWidth={1.5} />
                   {post.tags.map((tag) => (
-                    <Link key={tag.id} href={`/tag/${tag.name}`}>
-                      <Badge variant="outline" className="text-sm hover:bg-secondary">
+                    <Link key={tag.id} href={`/explore?tag=${tag.name}`}>
+                      <span className="px-2.5 py-1 rounded-lg bg-white/[0.03] text-xs text-white/40 hover:bg-white/[0.06] hover:text-white/60 transition-colors">
                         #{tag.name}
-                      </Badge>
+                      </span>
                     </Link>
                   ))}
                 </div>
@@ -277,53 +312,68 @@ export default function PostPage() {
 
               {/* Stats & Actions */}
               <div className="flex items-center justify-between px-6 py-4">
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-1">
                   <Button
                     variant="ghost"
                     size="sm"
-                    className={`gap-2 ${post.is_liked ? "text-red-400" : "text-muted-foreground hover:text-red-400"}`}
+                    className={cn(
+                      "gap-2 rounded-lg transition-all",
+                      post.is_liked
+                        ? "text-rose-400 hover:text-rose-400 hover:bg-rose-500/10"
+                        : "text-white/40 hover:text-rose-400 hover:bg-rose-500/10"
+                    )}
                     onClick={handleLike}
                   >
-                    <Heart className={`h-5 w-5 ${post.is_liked ? "fill-current" : ""}`} />
+                    <Heart className={cn("h-5 w-5", post.is_liked && "fill-current")} strokeWidth={1.5} />
                     <span>{post.likes_count}</span>
                   </Button>
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="gap-2 text-muted-foreground"
+                    className="gap-2 text-white/40 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg"
                   >
-                    <MessageSquare className="h-5 w-5" />
+                    <MessageSquare className="h-5 w-5" strokeWidth={1.5} />
                     <span>{post.comments_count}</span>
                   </Button>
-                  <div className="flex items-center gap-2 text-muted-foreground text-sm">
-                    <Eye className="h-5 w-5" />
-                    <span>{post.views} просмотров</span>
+                  <div className="flex items-center gap-2 px-3 py-1.5 text-white/30 text-sm">
+                    <Eye className="h-4 w-4" strokeWidth={1.5} />
+                    <span>{post.views}</span>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1">
                   <Button
                     variant="ghost"
                     size="icon"
-                    className={`${post.is_bookmarked ? "text-primary" : "text-muted-foreground hover:text-primary"}`}
+                    className={cn(
+                      "h-9 w-9 rounded-lg transition-all",
+                      post.is_bookmarked
+                        ? "text-yellow-400 hover:text-yellow-400 hover:bg-yellow-500/10"
+                        : "text-white/30 hover:text-yellow-400 hover:bg-yellow-500/10"
+                    )}
                     onClick={handleBookmark}
                   >
-                    <Bookmark className={`h-5 w-5 ${post.is_bookmarked ? "fill-current" : ""}`} />
+                    <Bookmark className={cn("h-5 w-5", post.is_bookmarked && "fill-current")} strokeWidth={1.5} />
                   </Button>
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="text-muted-foreground hover:text-primary"
+                    className="h-9 w-9 text-white/30 hover:text-white/60 hover:bg-white/[0.04] rounded-lg"
                     onClick={handleShare}
                   >
-                    <Share2 className="h-5 w-5" />
+                    <ExternalLink className="h-5 w-5" strokeWidth={1.5} />
                   </Button>
                 </div>
               </div>
             </article>
 
             {/* Comments Section */}
-            <Comments postId={postId} commentsCount={post.comments_count} />
+            <div className={cn(
+              "transition-all duration-500 delay-200",
+              mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+            )}>
+              <Comments postId={postId} commentsCount={post.comments_count} />
+            </div>
           </div>
         </main>
       </div>

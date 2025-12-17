@@ -1,9 +1,9 @@
 "use client"
 
-import { Search, SlidersHorizontal, X } from "lucide-react"
+import { useState } from "react"
+import { Search, SlidersHorizontal, X, Hash, Clock, ArrowUpDown, Layers } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 
 const languages = [
@@ -13,31 +13,23 @@ const languages = [
   { name: "Python", icon: "PY" },
   { name: "Rust", icon: "RS" },
   { name: "Go", icon: "GO" },
-  { name: "Swift", icon: "SW" },
-  { name: "YAML", icon: "YML" },
+  { name: "C++", icon: "C+" },
+  { name: "Java", icon: "JV" },
 ]
 
 const categories = ["Frontend", "Backend", "DevOps", "AI/ML", "Database", "Mobile"]
-const timeFilters = ["Today", "This Week", "This Month", "All Time"]
-const sortOptions = ["Most Stars", "Recent", "Most Forks", "Most Comments"]
+const timeFilters = ["Сегодня", "Неделя", "Месяц", "Всё время"]
+const sortOptions = [
+  { value: "Most Likes", label: "По лайкам" },
+  { value: "Most Comments", label: "По комментариям" },
+  { value: "Most Views", label: "По просмотрам" },
+  { value: "Recent", label: "Новые" },
+]
 
 const popularTags = [
-  "react",
-  "hooks",
-  "typescript",
-  "python",
-  "async",
-  "go",
-  "microservice",
-  "rust",
-  "cli",
-  "vue",
-  "node",
-  "auth",
-  "docker",
-  "devops",
-  "ios",
-  "swift",
+  "react", "hooks", "typescript", "python", "async", "go",
+  "microservice", "rust", "cli", "vue", "node", "auth",
+  "docker", "devops", "ios", "swift",
 ]
 
 interface ExploreFiltersProps {
@@ -73,6 +65,8 @@ export function ExploreFilters({
   showFilters,
   onShowFiltersChange,
 }: ExploreFiltersProps) {
+  const [isFocused, setIsFocused] = useState(false)
+
   const toggleCategory = (cat: string) => {
     onCategoriesChange(
       activeCategories.includes(cat) ? activeCategories.filter((c) => c !== cat) : [...activeCategories, cat],
@@ -87,22 +81,36 @@ export function ExploreFilters({
     <div className="space-y-4">
       {/* Search Bar */}
       <div className="flex gap-3">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <div className={cn(
+          "relative flex-1 rounded-xl transition-all duration-200",
+          isFocused && "ring-1 ring-white/[0.12]"
+        )}>
+          <Search className={cn(
+            "absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 transition-colors",
+            isFocused ? "text-white/50" : "text-white/25"
+          )} strokeWidth={1.5} />
           <Input
-            placeholder="Search snippets, repos, tags..."
-            className="pl-10 bg-secondary/50 border-border focus:bg-secondary"
+            placeholder="Поиск сниппетов, тегов..."
+            className="h-10 pl-10 bg-white/[0.03] border-white/[0.06] text-white placeholder:text-white/25 focus:border-white/[0.1] focus-visible:ring-0 rounded-xl"
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
+            onFocus={() => setIsFocused(true)}
+            onBlur={() => setIsFocused(false)}
           />
         </div>
         <Button
           variant="outline"
           size="icon"
           onClick={() => onShowFiltersChange(!showFilters)}
-          className={cn(showFilters && "bg-primary text-primary-foreground")}
+          className={cn(
+            "h-10 w-10 rounded-xl border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.05] transition-all",
+            showFilters && "bg-white/[0.08] border-white/[0.12]"
+          )}
         >
-          <SlidersHorizontal className="h-4 w-4" />
+          <SlidersHorizontal className={cn(
+            "h-4 w-4 transition-colors",
+            showFilters ? "text-white/70" : "text-white/40"
+          )} strokeWidth={1.5} />
         </Button>
       </div>
 
@@ -113,110 +121,139 @@ export function ExploreFilters({
             key={lang.name}
             onClick={() => onLanguageChange(lang.name)}
             className={cn(
-              "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all",
+              "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200",
               activeLanguage === lang.name
-                ? "bg-primary text-primary-foreground"
-                : "bg-secondary/50 text-muted-foreground hover:bg-secondary hover:text-foreground",
+                ? "bg-white/[0.1] text-white/90 border border-white/[0.12]"
+                : "bg-white/[0.02] text-white/40 border border-white/[0.04] hover:bg-white/[0.05] hover:text-white/60"
             )}
           >
-            <span className="font-mono text-xs opacity-70">{lang.icon}</span>
+            <span className="font-mono text-[10px] opacity-60">{lang.icon}</span>
             {lang.name}
           </button>
         ))}
       </div>
 
+      {/* Active Tags */}
       {activeTags.length > 0 && (
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs text-muted-foreground">Active tags:</span>
+          <span className="text-[10px] text-white/30 uppercase tracking-wider">Активные теги:</span>
           {activeTags.map((tag) => (
-            <Badge key={tag} variant="default" className="cursor-pointer" onClick={() => toggleTag(tag)}>
+            <button
+              key={tag}
+              onClick={() => toggleTag(tag)}
+              className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-white/[0.08] text-white/70 text-xs hover:bg-white/[0.12] transition-colors"
+            >
               {tag}
-              <X className="ml-1 h-3 w-3" />
-            </Badge>
+              <X className="h-3 w-3 text-white/40" strokeWidth={2} />
+            </button>
           ))}
-          <button onClick={() => onTagsChange([])} className="text-xs text-muted-foreground hover:text-foreground">
-            Clear all
+          <button
+            onClick={() => onTagsChange([])}
+            className="text-[10px] text-white/30 hover:text-white/60 transition-colors ml-1"
+          >
+            Очистить
           </button>
         </div>
       )}
 
       {/* Extended Filters Panel */}
       {showFilters && (
-        <div className="p-4 rounded-lg border border-border bg-card space-y-4 animate-in slide-in-from-top-2">
+        <div className="p-4 rounded-2xl border border-white/[0.04] bg-white/[0.02] space-y-5 animate-in slide-in-from-top-2">
+          {/* Tags */}
           <div>
-            <h4 className="text-xs font-medium text-muted-foreground mb-2">Tags</h4>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex items-center gap-2 mb-3">
+              <Hash className="h-3.5 w-3.5 text-white/30" strokeWidth={1.5} />
+              <h4 className="text-xs font-medium text-white/50">Теги</h4>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
               {popularTags.map((tag) => (
-                <Badge
+                <button
                   key={tag}
-                  variant={activeTags.includes(tag) ? "default" : "outline"}
-                  className="cursor-pointer"
                   onClick={() => toggleTag(tag)}
+                  className={cn(
+                    "px-2.5 py-1 rounded-lg text-xs transition-all duration-200",
+                    activeTags.includes(tag)
+                      ? "bg-white/[0.1] text-white/80 border border-white/[0.12]"
+                      : "bg-white/[0.02] text-white/35 border border-white/[0.04] hover:bg-white/[0.05] hover:text-white/60"
+                  )}
                 >
-                  {tag}
-                  {activeTags.includes(tag) && <X className="ml-1 h-3 w-3" />}
-                </Badge>
+                  #{tag}
+                </button>
               ))}
             </div>
           </div>
 
           {/* Categories */}
           <div>
-            <h4 className="text-xs font-medium text-muted-foreground mb-2">Categories</h4>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex items-center gap-2 mb-3">
+              <Layers className="h-3.5 w-3.5 text-white/30" strokeWidth={1.5} />
+              <h4 className="text-xs font-medium text-white/50">Категории</h4>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
               {categories.map((cat) => (
-                <Badge
+                <button
                   key={cat}
-                  variant={activeCategories.includes(cat) ? "default" : "outline"}
-                  className="cursor-pointer"
                   onClick={() => toggleCategory(cat)}
+                  className={cn(
+                    "px-2.5 py-1 rounded-lg text-xs transition-all duration-200",
+                    activeCategories.includes(cat)
+                      ? "bg-white/[0.1] text-white/80 border border-white/[0.12]"
+                      : "bg-white/[0.02] text-white/35 border border-white/[0.04] hover:bg-white/[0.05] hover:text-white/60"
+                  )}
                 >
                   {cat}
-                  {activeCategories.includes(cat) && <X className="ml-1 h-3 w-3" />}
-                </Badge>
-              ))}
-            </div>
-          </div>
-
-          {/* Time Filter */}
-          <div>
-            <h4 className="text-xs font-medium text-muted-foreground mb-2">Time Period</h4>
-            <div className="flex flex-wrap gap-2">
-              {timeFilters.map((time) => (
-                <button
-                  key={time}
-                  onClick={() => onTimeChange(time)}
-                  className={cn(
-                    "px-3 py-1 rounded-md text-xs transition-colors",
-                    activeTime === time
-                      ? "bg-secondary text-foreground"
-                      : "text-muted-foreground hover:text-foreground",
-                  )}
-                >
-                  {time}
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Sort */}
-          <div>
-            <h4 className="text-xs font-medium text-muted-foreground mb-2">Sort By</h4>
-            <div className="flex flex-wrap gap-2">
-              {sortOptions.map((sort) => (
-                <button
-                  key={sort}
-                  onClick={() => onSortChange(sort)}
-                  className={cn(
-                    "px-3 py-1 rounded-md text-xs transition-colors",
-                    activeSort === sort
-                      ? "bg-secondary text-foreground"
-                      : "text-muted-foreground hover:text-foreground",
-                  )}
-                >
-                  {sort}
-                </button>
-              ))}
+          <div className="grid grid-cols-2 gap-4">
+            {/* Time Filter */}
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <Clock className="h-3.5 w-3.5 text-white/30" strokeWidth={1.5} />
+                <h4 className="text-xs font-medium text-white/50">Период</h4>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {timeFilters.map((time) => (
+                  <button
+                    key={time}
+                    onClick={() => onTimeChange(time)}
+                    className={cn(
+                      "px-2.5 py-1 rounded-lg text-xs transition-all duration-200",
+                      activeTime === time
+                        ? "bg-white/[0.08] text-white/70"
+                        : "text-white/30 hover:text-white/60"
+                    )}
+                  >
+                    {time}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Sort */}
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <ArrowUpDown className="h-3.5 w-3.5 text-white/30" strokeWidth={1.5} />
+                <h4 className="text-xs font-medium text-white/50">Сортировка</h4>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {sortOptions.map((sort) => (
+                  <button
+                    key={sort.value}
+                    onClick={() => onSortChange(sort.value)}
+                    className={cn(
+                      "px-2.5 py-1 rounded-lg text-xs transition-all duration-200",
+                      activeSort === sort.value
+                        ? "bg-white/[0.08] text-white/70"
+                        : "text-white/30 hover:text-white/60"
+                    )}
+                  >
+                    {sort.label}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         </div>

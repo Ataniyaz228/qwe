@@ -32,5 +32,8 @@ urlpatterns = [
     path('trending/', views.TrendingPostsView.as_view(), name='trending-posts'),
     path('tags/', views.TagListView.as_view(), name='tag-list'),
     path('tags/<str:name>/posts/', views.TagPostsView.as_view(), name='tag-posts'),
+    
+    # Статистика платформы
+    path('stats/', views.PlatformStatsView.as_view(), name='platform-stats'),
 ]
 

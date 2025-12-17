@@ -6,8 +6,7 @@ import { Navbar } from "@/components/navbar"
 import { Sidebar } from "@/components/sidebar"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Bell, Heart, MessageSquare, UserPlus, Reply, Check, Loader2, FileCode } from "lucide-react"
+import { Bell, Heart, MessageSquare, UserPlus, Reply, Check, Loader2, FileCode, Sparkles, BellOff } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useAuth } from "@/contexts/AuthContext"
 import { notificationsAPI, type Notification } from "@/lib/api"
@@ -20,14 +19,6 @@ const iconMap: Record<string, typeof Bell> = {
   comment: MessageSquare,
   reply: Reply,
   new_post: FileCode,
-}
-
-const colorMap: Record<string, string> = {
-  follow: "text-primary",
-  like: "text-red-400",
-  comment: "text-blue-400",
-  reply: "text-purple-400",
-  new_post: "text-green-400",
 }
 
 const messageMap: Record<string, string> = {
@@ -48,9 +39,9 @@ function formatTimeAgo(dateStr: string): string {
   const days = Math.floor(diff / 86400000)
 
   if (minutes < 1) return "только что"
-  if (minutes < 60) return `${minutes}м назад`
-  if (hours < 24) return `${hours}ч назад`
-  if (days < 7) return `${days}д назад`
+  if (minutes < 60) return `${minutes}м`
+  if (hours < 24) return `${hours}ч`
+  if (days < 7) return `${days}д`
   return date.toLocaleDateString("ru-RU")
 }
 
@@ -61,15 +52,18 @@ export default function NotificationsPage() {
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [loading, setLoading] = useState(true)
   const [markingRead, setMarkingRead] = useState(false)
+  const [mounted, setMounted] = useState(false)
 
-  // Редирект если не авторизован
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
       router.push("/login")
     }
   }, [isAuthenticated, authLoading, router])
 
-  // Загрузка уведомлений
   useEffect(() => {
     if (!isAuthenticated) return
 
@@ -112,7 +106,6 @@ export default function NotificationsPage() {
       }
     }
 
-    // Переход к посту если есть
     if (notification.post_id) {
       router.push(`/post/${notification.post_id}`)
     }
@@ -120,11 +113,12 @@ export default function NotificationsPage() {
 
   const unreadCount = notifications.filter((n) => !n.is_read).length
 
-  // Показываем загрузку пока проверяем авторизацию
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      <div className="min-h-screen bg-[#09090b] flex items-center justify-center">
+        <div className="h-12 w-12 rounded-2xl bg-white/[0.04] border border-white/[0.06] flex items-center justify-center animate-pulse">
+          <Loader2 className="h-5 w-5 animate-spin text-white/40" />
+        </div>
       </div>
     )
   }
@@ -134,120 +128,209 @@ export default function NotificationsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-[#09090b]">
+      {/* Animated Background */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-20 right-1/4 w-[500px] h-[500px] bg-white/[0.015] rounded-full blur-[120px] animate-pulse" style={{ animationDuration: '8s' }} />
+        <div className="absolute bottom-20 left-1/4 w-[400px] h-[400px] bg-white/[0.01] rounded-full blur-[100px] animate-pulse" style={{ animationDuration: '10s', animationDelay: '2s' }} />
+      </div>
+
+      {/* CSS Animations */}
+      <style jsx global>{`
+        @keyframes fadeSlideUp {
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        @keyframes slideIn {
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+      `}</style>
+
       <Navbar />
       <div className="flex">
         <Sidebar />
-        <main className="flex-1 md:ml-16 lg:ml-56">
+        <main className="flex-1 md:ml-16 lg:ml-56 relative z-10">
           <div className="mx-auto max-w-2xl px-4 py-6">
+
             {/* Header */}
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h1 className="text-2xl font-bold mb-1 flex items-center gap-2">
-                  <Bell className="h-6 w-6 text-primary" />
-                  Уведомления
-                </h1>
-                <p className="text-muted-foreground">
-                  {unreadCount > 0 ? `${unreadCount} непрочитанных` : "Всё прочитано!"}
-                </p>
+            <div className={cn(
+              "flex items-center justify-between mb-6 transition-all duration-500",
+              mounted ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4"
+            )}>
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-xl bg-white/[0.04] border border-white/[0.06] flex items-center justify-center">
+                  <Bell className="h-5 w-5 text-white/50" strokeWidth={1.5} />
+                </div>
+                <div>
+                  <h1 className="text-lg font-semibold text-white/90">Уведомления</h1>
+                  <p className="text-xs text-white/35">
+                    {unreadCount > 0 ? (
+                      <span className="flex items-center gap-1.5">
+                        <span className="h-1.5 w-1.5 rounded-full bg-blue-400 animate-pulse" />
+                        {unreadCount} непрочитанных
+                      </span>
+                    ) : "Всё прочитано"}
+                  </p>
+                </div>
               </div>
               {unreadCount > 0 && (
                 <Button
                   variant="outline"
                   size="sm"
-                  className="gap-1.5 bg-transparent"
+                  className="gap-1.5 bg-white/[0.02] border-white/[0.06] text-white/50 hover:bg-white/[0.05] hover:text-white/70 rounded-xl transition-all duration-300"
                   onClick={handleMarkAllRead}
                   disabled={markingRead}
                 >
                   {markingRead ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
-                    <Check className="h-4 w-4" />
+                    <Check className="h-4 w-4" strokeWidth={1.5} />
                   )}
                   Прочитать все
                 </Button>
               )}
             </div>
 
+            {/* Stats Row */}
+            <div className={cn(
+              "grid grid-cols-3 gap-3 mb-6 transition-all duration-500 delay-100",
+              mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+            )}>
+              {[
+                { label: "Всего", value: notifications.length, icon: Bell },
+                { label: "Непрочитанных", value: unreadCount, icon: Sparkles },
+                {
+                  label: "Сегодня", value: notifications.filter(n => {
+                    const today = new Date()
+                    const notifDate = new Date(n.created_at)
+                    return notifDate.toDateString() === today.toDateString()
+                  }).length, icon: Heart
+                },
+              ].map((stat, i) => (
+                <div
+                  key={stat.label}
+                  className="group p-4 rounded-xl bg-white/[0.02] border border-white/[0.04] hover:border-white/[0.08] text-center transition-all duration-300"
+                  style={{ animationDelay: `${150 + i * 50}ms` }}
+                >
+                  <stat.icon className="h-4 w-4 mx-auto mb-2 text-white/20 group-hover:text-white/40 transition-colors" strokeWidth={1.5} />
+                  <p className="text-lg font-medium text-white/70">{stat.value}</p>
+                  <p className="text-[10px] text-white/25">{stat.label}</p>
+                </div>
+              ))}
+            </div>
+
             {/* Loading */}
             {loading && (
-              <div className="flex items-center justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              <div className="flex flex-col items-center justify-center py-16">
+                <Loader2 className="h-6 w-6 animate-spin text-white/30 mb-3" />
+                <p className="text-xs text-white/20">Загрузка...</p>
               </div>
             )}
 
             {/* Empty State */}
             {!loading && notifications.length === 0 && (
-              <div className="rounded-lg border border-border bg-card p-8 text-center">
-                <Bell className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <h3 className="font-semibold mb-2">Нет уведомлений</h3>
-                <p className="text-sm text-muted-foreground mb-4">
+              <div className={cn(
+                "rounded-2xl border border-white/[0.04] bg-gradient-to-b from-white/[0.02] to-transparent p-16 text-center transition-all duration-500 delay-200",
+                mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+              )}>
+                <div className="h-16 w-16 mx-auto mb-5 rounded-2xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-center">
+                  <BellOff className="h-7 w-7 text-white/20" strokeWidth={1} />
+                </div>
+                <h3 className="font-medium text-white/60 mb-2">Нет уведомлений</h3>
+                <p className="text-sm text-white/30 mb-6 max-w-xs mx-auto">
                   Здесь будут появляться уведомления о лайках, комментариях и подписках
                 </p>
                 <Link href="/explore">
-                  <Button variant="outline">Исследовать посты</Button>
+                  <Button variant="outline" className="gap-2 bg-white/[0.03] border-white/[0.08] text-white/60 hover:bg-white/[0.06] rounded-xl transition-all duration-300">
+                    Исследовать посты
+                  </Button>
                 </Link>
               </div>
             )}
 
             {/* Notifications List */}
             {!loading && notifications.length > 0 && (
-              <div className="rounded-lg border border-border bg-card overflow-hidden">
+              <div className={cn(
+                "space-y-2 transition-all duration-500 delay-200",
+                mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+              )}>
                 {notifications.map((notification, index) => {
-                  const Icon = iconMap[notification.notification_type]
-                  const iconColor = colorMap[notification.notification_type]
+                  const Icon = iconMap[notification.notification_type] || Bell
 
                   return (
                     <div
                       key={notification.id}
                       onClick={() => handleNotificationClick(notification)}
                       className={cn(
-                        "flex items-start gap-4 p-4 transition-colors hover:bg-secondary/50 cursor-pointer",
-                        index !== notifications.length - 1 && "border-b border-border",
-                        !notification.is_read && "bg-primary/5",
+                        "group flex items-start gap-4 p-4 rounded-xl border transition-all duration-300 cursor-pointer",
+                        notification.is_read
+                          ? "bg-white/[0.01] border-white/[0.04] hover:border-white/[0.08] hover:bg-white/[0.02]"
+                          : "bg-white/[0.03] border-white/[0.08] hover:bg-white/[0.04]"
                       )}
+                      style={{
+                        animationDelay: `${index * 50}ms`,
+                        animation: 'slideIn 0.4s ease-out forwards',
+                        opacity: 0,
+                        transform: 'translateX(-10px)'
+                      }}
                     >
-                      {/* Unread Indicator */}
-                      <div className="flex items-center gap-3">
-                        {!notification.is_read && <span className="h-2 w-2 rounded-full bg-primary shrink-0" />}
-                        {notification.is_read && <span className="h-2 w-2 shrink-0" />}
-                        <Avatar className="h-10 w-10 shrink-0">
+                      {/* Unread Indicator + Avatar */}
+                      <div className="relative">
+                        <Avatar className="h-11 w-11 border border-white/[0.08] transition-all group-hover:border-white/[0.15]">
                           <AvatarImage src={notification.sender?.avatar || "/developer-avatar.png"} />
-                          <AvatarFallback>
+                          <AvatarFallback className="bg-white/[0.04] text-white/40 text-sm">
                             {notification.sender?.display_name?.[0] || notification.sender?.username?.[0] || "?"}
                           </AvatarFallback>
                         </Avatar>
+                        {!notification.is_read && (
+                          <span className="absolute -top-0.5 -right-0.5 h-3 w-3 rounded-full bg-blue-500 border-2 border-[#09090b] animate-pulse" />
+                        )}
                       </div>
 
                       {/* Content */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <Icon className={cn("h-4 w-4 shrink-0", iconColor)} />
-                          <span className="text-sm">
-                            <span className="font-semibold">
+                          <div className="h-5 w-5 rounded-md bg-white/[0.04] flex items-center justify-center">
+                            <Icon className="h-3 w-3 text-white/40" strokeWidth={1.5} />
+                          </div>
+                          <span className="text-sm text-white/70">
+                            <span className="font-medium text-white/80">
                               {notification.sender?.display_name || notification.sender?.username}
                             </span>{" "}
-                            <span className="text-muted-foreground">
+                            <span className="text-white/40">
                               {messageMap[notification.notification_type]}
                             </span>
                           </span>
                         </div>
 
                         {notification.post_title && (
-                          <Badge variant="secondary" className="font-mono text-xs mb-1">
-                            {notification.post_title}
-                          </Badge>
+                          <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-white/[0.03] border border-white/[0.04] mt-1">
+                            <FileCode className="h-3 w-3 text-white/30" strokeWidth={1.5} />
+                            <span className="font-mono text-xs text-white/50">{notification.post_title}</span>
+                          </div>
                         )}
 
                         {notification.message && (
-                          <p className="text-sm text-muted-foreground line-clamp-1 mt-1">
+                          <p className="text-xs text-white/30 line-clamp-1 mt-1.5 italic">
                             "{notification.message}"
                           </p>
                         )}
 
-                        <span className="text-xs text-muted-foreground mt-1 block">
+                        <span className="text-[10px] text-white/20 mt-2 block">
                           {formatTimeAgo(notification.created_at)}
                         </span>
+                      </div>
+
+                      {/* Chevron on hover */}
+                      <div className="opacity-0 group-hover:opacity-100 transition-opacity self-center">
+                        <svg className="h-4 w-4 text-white/20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                        </svg>
                       </div>
                     </div>
                   )

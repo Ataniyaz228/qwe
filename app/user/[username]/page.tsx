@@ -7,44 +7,101 @@ import { Navbar } from "@/components/navbar"
 import { Sidebar } from "@/components/sidebar"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { usersAPI, postsAPI, type User, type Post } from "@/lib/api"
+import { usersAPI, type User, type Post } from "@/lib/api"
 import { useAuth } from "@/contexts/AuthContext"
 import {
     Loader2,
     MapPin,
     Link as LinkIcon,
     Github,
-    Twitter,
     Calendar,
     UserPlus,
     UserMinus,
-    CheckCircle2,
-    Code,
+    Code2,
     Heart,
     Eye,
-    MessageCircle
+    MessageSquare,
+    Settings,
+    FileCode,
+    Users,
+    Zap,
+    ExternalLink,
+    UserX
 } from "lucide-react"
 import { toast } from "sonner"
-import { CodeHighlight } from "@/components/code-highlight"
+import { cn } from "@/lib/utils"
 
-// Цвета языков
 const languageColors: Record<string, string> = {
-    javascript: "bg-yellow-500/20 text-yellow-400",
-    typescript: "bg-blue-500/20 text-blue-400",
-    python: "bg-green-500/20 text-green-400",
-    rust: "bg-orange-500/20 text-orange-400",
-    go: "bg-cyan-500/20 text-cyan-400",
-    java: "bg-red-500/20 text-red-400",
+    javascript: "bg-yellow-400",
+    typescript: "bg-blue-400",
+    python: "bg-green-400",
+    rust: "bg-orange-400",
+    go: "bg-cyan-400",
+    java: "bg-red-400",
+    csharp: "bg-purple-400",
+    cpp: "bg-pink-400",
 }
 
 function formatDate(date: string) {
     return new Date(date).toLocaleDateString("ru-RU", {
-        day: "numeric",
         month: "long",
         year: "numeric"
     })
+}
+
+interface PostCardProps {
+    post: Post
+    index: number
+}
+
+function PostCard({ post, index }: PostCardProps) {
+    const langColor = languageColors[post.language?.toLowerCase() || ""] || "bg-white/30"
+
+    return (
+        <Link href={`/post/${post.id}`}>
+            <div
+                className="group p-5 rounded-xl bg-white/[0.02] border border-white/[0.04] hover:border-white/[0.1] hover:bg-white/[0.03] transition-all duration-300 cursor-pointer"
+                style={{
+                    animationDelay: `${index * 60}ms`,
+                    animation: 'fadeSlideUp 0.4s ease-out forwards',
+                    opacity: 0,
+                    transform: 'translateY(10px)'
+                }}
+            >
+                <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-2">
+                            <span className={cn("h-2 w-2 rounded-full", langColor)} />
+                            <span className="text-[10px] text-white/30 font-mono uppercase tracking-wider">{post.language}</span>
+                        </div>
+                        <h3 className="font-medium text-white/80 group-hover:text-white transition-colors">
+                            {post.title || post.filename}
+                        </h3>
+                        <p className="text-xs text-white/35 mt-1 line-clamp-2">
+                            {post.description || "Нет описания"}
+                        </p>
+                    </div>
+                    <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                        <ExternalLink className="h-4 w-4 text-white/30" strokeWidth={1.5} />
+                    </div>
+                </div>
+                <div className="flex items-center gap-4 mt-4 pt-3 border-t border-white/[0.04] text-[10px] text-white/25">
+                    <span className={cn("flex items-center gap-1", post.is_liked && "text-rose-400")}>
+                        <Heart className={cn("h-3.5 w-3.5", post.is_liked && "fill-current")} strokeWidth={1.5} />
+                        {post.likes_count || 0}
+                    </span>
+                    <span className="flex items-center gap-1">
+                        <MessageSquare className="h-3.5 w-3.5" strokeWidth={1.5} />
+                        {post.comments_count || 0}
+                    </span>
+                    <span className="flex items-center gap-1">
+                        <Eye className="h-3.5 w-3.5" strokeWidth={1.5} />
+                        {post.views || 0}
+                    </span>
+                </div>
+            </div>
+        </Link>
+    )
 }
 
 export default function UserProfilePage() {
@@ -57,10 +114,12 @@ export default function UserProfilePage() {
     const [loading, setLoading] = useState(true)
     const [followLoading, setFollowLoading] = useState(false)
     const [isFollowing, setIsFollowing] = useState(false)
+    const [mounted, setMounted] = useState(false)
 
     const isOwnProfile = currentUser?.username === username
 
     useEffect(() => {
+        setMounted(true)
         loadUserData()
     }, [username])
 
@@ -89,8 +148,8 @@ export default function UserProfilePage() {
         }
 
         const wasFollowing = isFollowing
-
         setFollowLoading(true)
+
         try {
             if (wasFollowing) {
                 await usersAPI.unfollow(username)
@@ -100,12 +159,9 @@ export default function UserProfilePage() {
                 toast.success("Вы подписались")
             }
         } catch (err) {
-            // Ошибки типа "уже подписан" или "не подписан" игнорируем
-            // UI просто синхронизируется с сервером
             console.log("Follow/unfollow handled:", err)
         }
 
-        // Всегда перезагружаем данные чтобы синхронизировать UI
         try {
             const userData = await usersAPI.getProfile(username)
             setUser(userData)
@@ -118,12 +174,14 @@ export default function UserProfilePage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-background">
+            <div className="min-h-screen bg-[#09090b]">
                 <Navbar />
                 <div className="flex">
                     <Sidebar />
                     <main className="flex-1 md:ml-16 lg:ml-56 flex items-center justify-center min-h-[60vh]">
-                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                        <div className="h-12 w-12 rounded-2xl bg-white/[0.04] border border-white/[0.06] flex items-center justify-center animate-pulse">
+                            <Loader2 className="h-5 w-5 animate-spin text-white/40" />
+                        </div>
                     </main>
                 </div>
             </div>
@@ -132,14 +190,17 @@ export default function UserProfilePage() {
 
     if (!user) {
         return (
-            <div className="min-h-screen bg-background">
+            <div className="min-h-screen bg-[#09090b]">
                 <Navbar />
                 <div className="flex">
                     <Sidebar />
                     <main className="flex-1 md:ml-16 lg:ml-56 flex items-center justify-center min-h-[60vh]">
                         <div className="text-center">
-                            <h1 className="text-2xl font-bold mb-2">Пользователь не найден</h1>
-                            <p className="text-muted-foreground">@{username}</p>
+                            <div className="h-16 w-16 mx-auto mb-4 rounded-2xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-center">
+                                <UserX className="h-7 w-7 text-white/20" strokeWidth={1} />
+                            </div>
+                            <h1 className="text-lg font-medium text-white/70 mb-1">Пользователь не найден</h1>
+                            <p className="text-sm text-white/30">@{username}</p>
                         </div>
                     </main>
                 </div>
@@ -148,170 +209,196 @@ export default function UserProfilePage() {
     }
 
     return (
-        <div className="min-h-screen bg-background">
+        <div className="min-h-screen bg-[#09090b]">
+            {/* Animated Background */}
+            <div className="fixed inset-0 pointer-events-none overflow-hidden">
+                <div className="absolute top-20 left-1/4 w-[500px] h-[500px] bg-white/[0.015] rounded-full blur-[120px] animate-pulse" style={{ animationDuration: '8s' }} />
+                <div className="absolute bottom-20 right-1/4 w-[400px] h-[400px] bg-white/[0.01] rounded-full blur-[100px] animate-pulse" style={{ animationDuration: '10s', animationDelay: '2s' }} />
+            </div>
+
+            {/* CSS Animations */}
+            <style jsx global>{`
+                @keyframes fadeSlideUp {
+                    to {
+                        opacity: 1;
+                        transform: translateY(0);
+                    }
+                }
+            `}</style>
+
             <Navbar />
             <div className="flex">
                 <Sidebar />
-                <main className="flex-1 md:ml-16 lg:ml-56">
+                <main className="flex-1 md:ml-16 lg:ml-56 relative z-10">
                     <div className="max-w-4xl mx-auto p-4 md:p-6">
+
                         {/* Profile Header */}
-                        <div className="rounded-xl border border-border bg-card overflow-hidden mb-6">
-                            {/* Banner */}
-                            <div className="h-32 bg-gradient-to-r from-primary/30 via-primary/20 to-secondary/30" />
+                        <div className={cn(
+                            "rounded-2xl border border-white/[0.06] bg-gradient-to-b from-white/[0.03] to-[#0c0c0e] overflow-hidden mb-6 transition-all duration-700",
+                            mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
+                        )}>
+                            {/* Animated Cover */}
+                            <div className="h-28 relative overflow-hidden">
+                                <div className="absolute inset-0 bg-gradient-to-r from-white/[0.02] via-white/[0.05] to-white/[0.02]" />
+                                <div
+                                    className="absolute inset-0 opacity-30"
+                                    style={{
+                                        background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.03), transparent)',
+                                        backgroundSize: '200% 100%',
+                                        animation: 'shimmer 3s infinite linear'
+                                    }}
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#0c0c0e]" />
 
-                            {/* Profile Info */}
-                            <div className="px-6 pb-6">
-                                <div className="flex flex-col sm:flex-row sm:items-end gap-4 -mt-12">
-                                    <Avatar className="h-24 w-24 border-4 border-background">
-                                        <AvatarImage src={user.avatar || "/developer-avatar.png"} />
-                                        <AvatarFallback className="text-2xl">
-                                            {(user.display_name || user.username)?.[0]?.toUpperCase()}
-                                        </AvatarFallback>
-                                    </Avatar>
+                                {/* Floating elements */}
+                                <div className="absolute top-4 right-8 h-2 w-2 rounded-full bg-white/10 animate-pulse" style={{ animationDelay: '0s' }} />
+                                <div className="absolute top-8 right-20 h-1.5 w-1.5 rounded-full bg-white/5 animate-pulse" style={{ animationDelay: '1s' }} />
+                            </div>
 
-                                    <div className="flex-1 sm:pb-2">
-                                        <div className="flex items-center gap-2">
-                                            <h1 className="text-2xl font-bold">{user.display_name || user.username}</h1>
-                                            {user.is_verified && (
-                                                <CheckCircle2 className="h-5 w-5 text-primary fill-primary" />
+                            <div className="px-6 pb-6 -mt-14 relative">
+                                <div className="flex flex-col sm:flex-row gap-5">
+                                    {/* Avatar */}
+                                    <div className="relative group">
+                                        <div className="absolute inset-0 rounded-full bg-white/10 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                                        <Avatar className="h-28 w-28 border-4 border-[#0c0c0e] ring-2 ring-white/[0.1] transition-all duration-500 group-hover:ring-white/[0.2]">
+                                            <AvatarImage src={user.avatar || "/developer-avatar.png"} />
+                                            <AvatarFallback className="bg-white/[0.04] text-white/40 text-2xl">
+                                                {(user.display_name || user.username)?.[0]?.toUpperCase()}
+                                            </AvatarFallback>
+                                        </Avatar>
+                                        <span className="absolute bottom-2 right-2 h-5 w-5 rounded-full bg-green-500 border-3 border-[#0c0c0e] animate-pulse" style={{ animationDuration: '2s' }} />
+                                    </div>
+
+                                    {/* Info */}
+                                    <div className="flex-1 pt-2 sm:pt-6">
+                                        <div className="flex items-start justify-between gap-4 flex-wrap">
+                                            <div>
+                                                <div className="flex items-center gap-3">
+                                                    <h1 className="text-2xl font-semibold text-white/90">{user.display_name || user.username}</h1>
+                                                    {user.is_verified && (
+                                                        <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/[0.06] border border-white/[0.08] text-white/60 text-[10px]">
+                                                            <Zap className="h-3 w-3" strokeWidth={2} />
+                                                            Pro
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <p className="text-sm text-white/35 mt-0.5">@{user.username}</p>
+                                            </div>
+
+                                            {!isOwnProfile ? (
+                                                <Button
+                                                    onClick={handleFollow}
+                                                    disabled={followLoading}
+                                                    className={cn(
+                                                        "gap-2 rounded-xl transition-all duration-300",
+                                                        isFollowing
+                                                            ? "bg-white/[0.03] border border-white/[0.08] text-white/60 hover:bg-red-500/10 hover:border-red-500/30 hover:text-red-400"
+                                                            : "bg-white text-black hover:bg-white/90"
+                                                    )}
+                                                >
+                                                    {followLoading ? (
+                                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                                    ) : isFollowing ? (
+                                                        <>
+                                                            <UserMinus className="h-4 w-4" strokeWidth={1.5} />
+                                                            Отписаться
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <UserPlus className="h-4 w-4" strokeWidth={2} />
+                                                            Подписаться
+                                                        </>
+                                                    )}
+                                                </Button>
+                                            ) : (
+                                                <Link href="/settings">
+                                                    <Button className="gap-2 bg-white text-black hover:bg-white/90 rounded-xl font-medium transition-all duration-300 hover:scale-105">
+                                                        <Settings className="h-4 w-4" strokeWidth={2} />
+                                                        Настройки
+                                                    </Button>
+                                                </Link>
                                             )}
                                         </div>
-                                        <p className="text-muted-foreground">@{user.username}</p>
-                                    </div>
 
-                                    {!isOwnProfile && (
-                                        <Button
-                                            onClick={handleFollow}
-                                            disabled={followLoading}
-                                            variant={isFollowing ? "outline" : "default"}
-                                            className="gap-2"
-                                        >
-                                            {followLoading ? (
-                                                <Loader2 className="h-4 w-4 animate-spin" />
-                                            ) : isFollowing ? (
-                                                <>
-                                                    <UserMinus className="h-4 w-4" />
-                                                    Отписаться
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <UserPlus className="h-4 w-4" />
-                                                    Подписаться
-                                                </>
+                                        {user.bio && (
+                                            <p className="mt-4 text-sm text-white/50 leading-relaxed max-w-lg">{user.bio}</p>
+                                        )}
+
+                                        {/* Meta Links */}
+                                        <div className="flex flex-wrap gap-5 mt-5 text-xs">
+                                            {user.location && (
+                                                <span className="flex items-center gap-1.5 text-white/30">
+                                                    <MapPin className="h-3.5 w-3.5" strokeWidth={1.5} />
+                                                    {user.location}
+                                                </span>
                                             )}
-                                        </Button>
-                                    )}
-
-                                    {isOwnProfile && (
-                                        <Button variant="outline" asChild>
-                                            <Link href="/settings">Редактировать профиль</Link>
-                                        </Button>
-                                    )}
-                                </div>
-
-                                {/* Bio */}
-                                {user.bio && (
-                                    <p className="mt-4 text-sm">{user.bio}</p>
-                                )}
-
-                                {/* Stats & Links */}
-                                <div className="mt-4 flex flex-wrap gap-4 text-sm text-muted-foreground">
-                                    {user.location && (
-                                        <span className="flex items-center gap-1">
-                                            <MapPin className="h-4 w-4" />
-                                            {user.location}
-                                        </span>
-                                    )}
-                                    {user.website && (
-                                        <a href={user.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-primary">
-                                            <LinkIcon className="h-4 w-4" />
-                                            {new URL(user.website).hostname}
-                                        </a>
-                                    )}
-                                    {user.github_username && (
-                                        <a href={`https://github.com/${user.github_username}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-primary">
-                                            <Github className="h-4 w-4" />
-                                            {user.github_username}
-                                        </a>
-                                    )}
-                                    {user.twitter_username && (
-                                        <a href={`https://twitter.com/${user.twitter_username}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-primary">
-                                            <Twitter className="h-4 w-4" />
-                                            @{user.twitter_username}
-                                        </a>
-                                    )}
-                                    <span className="flex items-center gap-1">
-                                        <Calendar className="h-4 w-4" />
-                                        Присоединился {formatDate(user.date_joined || new Date().toISOString())}
-                                    </span>
-                                </div>
-
-                                {/* Counters */}
-                                <div className="mt-4 flex gap-6">
-                                    <div className="text-center">
-                                        <div className="text-xl font-bold">{user.posts_count || 0}</div>
-                                        <div className="text-xs text-muted-foreground">постов</div>
-                                    </div>
-                                    <div className="text-center">
-                                        <div className="text-xl font-bold">{user.followers_count || 0}</div>
-                                        <div className="text-xs text-muted-foreground">подписчиков</div>
-                                    </div>
-                                    <div className="text-center">
-                                        <div className="text-xl font-bold">{user.following_count || 0}</div>
-                                        <div className="text-xs text-muted-foreground">подписок</div>
+                                            {user.website && (
+                                                <a href={user.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-white/30 hover:text-white/60 transition-colors group">
+                                                    <LinkIcon className="h-3.5 w-3.5 group-hover:rotate-12 transition-transform" strokeWidth={1.5} />
+                                                    {new URL(user.website).hostname}
+                                                </a>
+                                            )}
+                                            {user.github_username && (
+                                                <a href={`https://github.com/${user.github_username}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-white/30 hover:text-white/60 transition-colors group">
+                                                    <Github className="h-3.5 w-3.5 group-hover:rotate-12 transition-transform" strokeWidth={1.5} />
+                                                    {user.github_username}
+                                                </a>
+                                            )}
+                                            <span className="flex items-center gap-1.5 text-white/30">
+                                                <Calendar className="h-3.5 w-3.5" strokeWidth={1.5} />
+                                                С {formatDate(user.date_joined || new Date().toISOString())}
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Posts */}
-                        <div className="rounded-xl border border-border bg-card overflow-hidden">
-                            <div className="px-6 py-4 border-b border-border">
-                                <h2 className="font-semibold flex items-center gap-2">
-                                    <Code className="h-4 w-4" />
-                                    Посты ({posts.length})
-                                </h2>
+                        {/* Stats Grid */}
+                        <div className={cn(
+                            "grid grid-cols-3 gap-2 mb-6 transition-all duration-700 delay-100",
+                            mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
+                        )}>
+                            {[
+                                { label: "Постов", value: user.posts_count || 0, icon: FileCode },
+                                { label: "Подписчиков", value: user.followers_count || 0, icon: Users },
+                                { label: "Подписки", value: user.following_count || 0, icon: UserPlus },
+                            ].map((stat, i) => (
+                                <div
+                                    key={stat.label}
+                                    className="group p-4 rounded-xl bg-white/[0.02] border border-white/[0.04] hover:border-white/[0.08] text-center transition-all duration-300 hover:-translate-y-1"
+                                >
+                                    <stat.icon className="h-4 w-4 mx-auto mb-2 text-white/20 group-hover:text-white/40 transition-colors" strokeWidth={1.5} />
+                                    <p className="text-xl font-medium text-white/70 group-hover:text-white/90 transition-colors">{stat.value}</p>
+                                    <p className="text-[10px] text-white/25">{stat.label}</p>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Posts Section */}
+                        <div className={cn(
+                            "transition-all duration-700 delay-200",
+                            mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
+                        )}>
+                            <div className="flex items-center gap-2 mb-4">
+                                <div className="h-8 w-8 rounded-lg bg-white/[0.04] border border-white/[0.06] flex items-center justify-center">
+                                    <Code2 className="h-4 w-4 text-white/40" strokeWidth={1.5} />
+                                </div>
+                                <h2 className="text-sm font-medium text-white/60">Посты ({posts.length})</h2>
                             </div>
 
                             {posts.length === 0 ? (
-                                <div className="p-8 text-center text-muted-foreground">
-                                    <Code className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                                    <p>Пока нет постов</p>
+                                <div className="rounded-2xl border border-white/[0.04] bg-gradient-to-b from-white/[0.02] to-transparent p-16 text-center">
+                                    <div className="h-16 w-16 mx-auto mb-5 rounded-2xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-center">
+                                        <Code2 className="h-7 w-7 text-white/20" strokeWidth={1} />
+                                    </div>
+                                    <h3 className="font-medium text-white/60 mb-2">Пока нет постов</h3>
+                                    <p className="text-sm text-white/30">Пользователь ещё не опубликовал код</p>
                                 </div>
                             ) : (
-                                <div className="divide-y divide-border">
-                                    {posts.map((post) => (
-                                        <Link
-                                            key={post.id}
-                                            href={`/post/${post.id}`}
-                                            className="block p-4 hover:bg-muted/50 transition-colors"
-                                        >
-                                            <div className="flex items-start justify-between gap-4">
-                                                <div className="flex-1 min-w-0">
-                                                    <h3 className="font-medium truncate">{post.title}</h3>
-                                                    <p className="text-sm text-muted-foreground truncate mt-1">
-                                                        {post.description || post.filename}
-                                                    </p>
-                                                    <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
-                                                        <Badge variant="outline" className={`text-xs ${languageColors[post.language] || ""}`}>
-                                                            {post.language}
-                                                        </Badge>
-                                                        <span className="flex items-center gap-1">
-                                                            <Heart className="h-3 w-3" />
-                                                            {post.likes_count || 0}
-                                                        </span>
-                                                        <span className="flex items-center gap-1">
-                                                            <MessageCircle className="h-3 w-3" />
-                                                            {post.comments_count || 0}
-                                                        </span>
-                                                        <span className="flex items-center gap-1">
-                                                            <Eye className="h-3 w-3" />
-                                                            {post.views || 0}
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </Link>
+                                <div className="space-y-3">
+                                    {posts.map((post, i) => (
+                                        <PostCard key={post.id} post={post} index={i} />
                                     ))}
                                 </div>
                             )}

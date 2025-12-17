@@ -424,6 +424,21 @@ export const postsAPI = {
     },
 
     /**
+     * Статистика платформы
+     */
+    stats: async (): Promise<{
+        total_likes: number;
+        total_comments: number;
+        total_views: number;
+        today_likes: number;
+        today_comments: number;
+        total_posts: number;
+        total_users: number;
+    }> => {
+        return fetchAPI('/stats/');
+    },
+
+    /**
      * Закладки текущего пользователя
      */
     bookmarks: async (): Promise<PaginatedResponse<Post>> => {

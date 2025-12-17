@@ -363,3 +363,41 @@ class MarkNotificationReadView(APIView):
         notification.is_read = True
         notification.save()
         return Response({'status': 'ok'})
+
+
+class PlatformStatsView(APIView):
+    """Статистика платформы: лайки, комментарии, просмотры"""
+    permission_classes = [permissions.AllowAny]
+    
+    def get(self, request):
+        from django.db.models import Sum, Count
+        from datetime import datetime, timedelta
+        from django.utils import timezone
+        
+        # За сегодня
+        today = timezone.now().date()
+        today_start = timezone.make_aware(datetime.combine(today, datetime.min.time()))
+        
+        # Общие данные
+        total_likes = Like.objects.count()
+        total_comments = Comment.objects.count()
+        total_views = Post.objects.aggregate(total=Sum('views'))['total'] or 0
+        
+        # За сегодня
+        today_likes = Like.objects.filter(created_at__gte=today_start).count()
+        today_comments = Comment.objects.filter(created_at__gte=today_start).count()
+        
+        # Посты и пользователи
+        total_posts = Post.objects.filter(is_public=True).count()
+        total_users = Post.objects.values('author').distinct().count()
+        
+        return Response({
+            'total_likes': total_likes,
+            'total_comments': total_comments,
+            'total_views': total_views,
+            'today_likes': today_likes,
+            'today_comments': today_comments,
+            'total_posts': total_posts,
+            'total_users': total_users,
+        })
+
