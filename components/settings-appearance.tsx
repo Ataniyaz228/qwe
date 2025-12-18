@@ -31,13 +31,13 @@ console.log(result);`
 export function SettingsAppearance() {
   const [saving, setSaving] = useState(false)
   const { settings, updateSettings } = useCodeSettings()
-  const { language, setLanguage } = useLanguage()
+  const { language, setLanguage, t } = useLanguage()
 
   const handleSave = async () => {
     setSaving(true)
     await new Promise((resolve) => setTimeout(resolve, 300))
     setSaving(false)
-    toast.success("Настройки сохранены!")
+    toast.success(t.settingsPage.settingsSaved)
   }
 
   return (
@@ -47,8 +47,8 @@ export function SettingsAppearance() {
         <div className="flex items-center gap-2 mb-3">
           <Globe className="h-4 w-4 text-white/40" strokeWidth={1.5} />
           <div>
-            <h3 className="text-sm font-medium text-white/70">Язык интерфейса</h3>
-            <p className="text-[11px] text-white/30">Выберите предпочитаемый язык</p>
+            <h3 className="text-sm font-medium text-white/70">{t.settingsPage.interfaceLanguage}</h3>
+            <p className="text-[11px] text-white/30">{t.settingsPage.selectPreferredLanguage}</p>
           </div>
         </div>
         <div className="flex gap-3">
@@ -78,8 +78,8 @@ export function SettingsAppearance() {
         <div className="flex items-center gap-2 mb-3">
           <Code2 className="h-4 w-4 text-white/40" strokeWidth={1.5} />
           <div>
-            <h3 className="text-sm font-medium text-white/70">Тема кода</h3>
-            <p className="text-[11px] text-white/30">Подсветка синтаксиса</p>
+            <h3 className="text-sm font-medium text-white/70">{t.settingsPage.codeTheme}</h3>
+            <p className="text-[11px] text-white/30">{t.settingsPage.syntaxHighlighting}</p>
           </div>
         </div>
         <Select
@@ -104,8 +104,8 @@ export function SettingsAppearance() {
         <div className="flex items-center gap-2 mb-3">
           <Type className="h-4 w-4 text-white/40" strokeWidth={1.5} />
           <div>
-            <h3 className="text-sm font-medium text-white/70">Шрифт кода</h3>
-            <p className="text-[11px] text-white/30">Моноширинный шрифт</p>
+            <h3 className="text-sm font-medium text-white/70">{t.settingsPage.codeFont}</h3>
+            <p className="text-[11px] text-white/30">{t.settingsPage.monospacedFont}</p>
           </div>
         </div>
         <Select
@@ -131,8 +131,8 @@ export function SettingsAppearance() {
       <div className="space-y-4 p-5 rounded-xl bg-white/[0.02] border border-white/[0.04]">
         <div className="flex items-center justify-between mb-3">
           <div>
-            <h3 className="text-sm font-medium text-white/70">Размер шрифта</h3>
-            <p className="text-[11px] text-white/30">Размер текста в коде</p>
+            <h3 className="text-sm font-medium text-white/70">{t.settingsPage.fontSize}</h3>
+            <p className="text-[11px] text-white/30">{t.settingsPage.fontSizeInCode}</p>
           </div>
           <span className="font-mono text-sm font-bold text-white/80 bg-white/[0.06] px-3 py-1 rounded-lg">
             {settings.fontSize}px
@@ -156,8 +156,8 @@ export function SettingsAppearance() {
       <div className="space-y-4 p-5 rounded-xl bg-white/[0.02] border border-white/[0.04]">
         <div className="flex items-center justify-between mb-3">
           <div>
-            <h3 className="text-sm font-medium text-white/70">Межстрочный интервал</h3>
-            <p className="text-[11px] text-white/30">Отступ между строками</p>
+            <h3 className="text-sm font-medium text-white/70">{t.settingsPage.lineHeight}</h3>
+            <p className="text-[11px] text-white/30">{t.settingsPage.spaceBetweenLines}</p>
           </div>
           <span className="font-mono text-sm font-bold text-white/80 bg-white/[0.06] px-3 py-1 rounded-lg">
             {settings.lineHeight}
@@ -172,8 +172,8 @@ export function SettingsAppearance() {
           className="max-w-md"
         />
         <div className="flex justify-between text-[10px] text-white/25 max-w-md">
-          <span>Компактно (1.0)</span>
-          <span>Просторно (2.0)</span>
+          <span>{t.settingsPage.compact} (1.0)</span>
+          <span>{t.settingsPage.spacious} (2.0)</span>
         </div>
       </div>
 
@@ -182,15 +182,15 @@ export function SettingsAppearance() {
         <div className="flex items-center gap-2 mb-3">
           <Hash className="h-4 w-4 text-white/40" strokeWidth={1.5} />
           <div>
-            <h3 className="text-sm font-medium text-white/70">Настройки редактора</h3>
-            <p className="text-[11px] text-white/30">Дополнительные опции</p>
+            <h3 className="text-sm font-medium text-white/70">{t.settingsPage.editorSettings}</h3>
+            <p className="text-[11px] text-white/30">{t.settingsPage.additionalOptions}</p>
           </div>
         </div>
         <div className="space-y-3">
           <div className="flex items-center justify-between p-4 rounded-xl bg-white/[0.02] border border-white/[0.04]">
             <div>
-              <Label className="text-sm text-white/60">Номера строк</Label>
-              <p className="text-[11px] text-white/30">Слева от кода</p>
+              <Label className="text-sm text-white/60">{t.settingsPage.lineNumbers}</Label>
+              <p className="text-[11px] text-white/30">{t.settingsPage.leftOfCode}</p>
             </div>
             <Switch
               checked={settings.lineNumbers}
@@ -199,8 +199,8 @@ export function SettingsAppearance() {
           </div>
           <div className="flex items-center justify-between p-4 rounded-xl bg-white/[0.02] border border-white/[0.04]">
             <div>
-              <Label className="text-sm text-white/60">Перенос строк</Label>
-              <p className="text-[11px] text-white/30">Автоматический перенос</p>
+              <Label className="text-sm text-white/60">{t.settingsPage.wordWrap}</Label>
+              <p className="text-[11px] text-white/30">{t.settingsPage.autoWrap}</p>
             </div>
             <Switch
               checked={settings.wordWrap}
@@ -215,8 +215,8 @@ export function SettingsAppearance() {
         <div className="flex items-center gap-2 mb-3">
           <Eye className="h-4 w-4 text-white/40" strokeWidth={1.5} />
           <div>
-            <h3 className="text-sm font-medium text-white/70">Предпросмотр</h3>
-            <p className="text-[11px] text-white/30">Как будет выглядеть код</p>
+            <h3 className="text-sm font-medium text-white/70">{t.settingsPage.preview}</h3>
+            <p className="text-[11px] text-white/30">{t.settingsPage.codePreview}</p>
           </div>
         </div>
         <div className="rounded-xl border border-white/[0.04] overflow-hidden">
@@ -236,12 +236,12 @@ export function SettingsAppearance() {
         {saving ? (
           <>
             <Loader2 className="h-4 w-4 animate-spin" />
-            Сохранение...
+            {t.settingsPage.saving}
           </>
         ) : (
           <>
             <Save className="h-4 w-4" strokeWidth={2} />
-            Сохранить настройки
+            {t.settingsPage.saveSettings}
           </>
         )}
       </Button>

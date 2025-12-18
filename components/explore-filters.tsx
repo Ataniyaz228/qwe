@@ -5,6 +5,7 @@ import { Search, SlidersHorizontal, X, Hash, Clock, ArrowUpDown, Layers } from "
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { useLanguage } from "@/contexts/LanguageContext"
 
 const languages = [
   { name: "All", icon: "✦" },
@@ -66,6 +67,7 @@ export function ExploreFilters({
   onShowFiltersChange,
 }: ExploreFiltersProps) {
   const [isFocused, setIsFocused] = useState(false)
+  const { t } = useLanguage()
 
   const toggleCategory = (cat: string) => {
     onCategoriesChange(
@@ -90,7 +92,7 @@ export function ExploreFilters({
             isFocused ? "text-white/50" : "text-white/25"
           )} strokeWidth={1.5} />
           <Input
-            placeholder="Поиск сниппетов, тегов..."
+            placeholder={t.filters.searchPlaceholder}
             className="h-10 pl-10 bg-white/[0.03] border-white/[0.06] text-white placeholder:text-white/25 focus:border-white/[0.1] focus-visible:ring-0 rounded-xl"
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
@@ -136,7 +138,7 @@ export function ExploreFilters({
       {/* Active Tags */}
       {activeTags.length > 0 && (
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-[10px] text-white/30 uppercase tracking-wider">Активные теги:</span>
+          <span className="text-[10px] text-white/30 uppercase tracking-wider">{t.filters.activeTags}</span>
           {activeTags.map((tag) => (
             <button
               key={tag}
@@ -151,7 +153,7 @@ export function ExploreFilters({
             onClick={() => onTagsChange([])}
             className="text-[10px] text-white/30 hover:text-white/60 transition-colors ml-1"
           >
-            Очистить
+            {t.filters.clear}
           </button>
         </div>
       )}
@@ -163,7 +165,7 @@ export function ExploreFilters({
           <div>
             <div className="flex items-center gap-2 mb-3">
               <Hash className="h-3.5 w-3.5 text-white/30" strokeWidth={1.5} />
-              <h4 className="text-xs font-medium text-white/50">Теги</h4>
+              <h4 className="text-xs font-medium text-white/50">{t.filters.tags}</h4>
             </div>
             <div className="flex flex-wrap gap-1.5">
               {popularTags.map((tag) => (
@@ -187,7 +189,7 @@ export function ExploreFilters({
           <div>
             <div className="flex items-center gap-2 mb-3">
               <Layers className="h-3.5 w-3.5 text-white/30" strokeWidth={1.5} />
-              <h4 className="text-xs font-medium text-white/50">Категории</h4>
+              <h4 className="text-xs font-medium text-white/50">{t.filters.categories}</h4>
             </div>
             <div className="flex flex-wrap gap-1.5">
               {categories.map((cat) => (
@@ -212,7 +214,7 @@ export function ExploreFilters({
             <div>
               <div className="flex items-center gap-2 mb-3">
                 <Clock className="h-3.5 w-3.5 text-white/30" strokeWidth={1.5} />
-                <h4 className="text-xs font-medium text-white/50">Период</h4>
+                <h4 className="text-xs font-medium text-white/50">{t.filters.period}</h4>
               </div>
               <div className="flex flex-wrap gap-1.5">
                 {timeFilters.map((time) => (
@@ -236,7 +238,7 @@ export function ExploreFilters({
             <div>
               <div className="flex items-center gap-2 mb-3">
                 <ArrowUpDown className="h-3.5 w-3.5 text-white/30" strokeWidth={1.5} />
-                <h4 className="text-xs font-medium text-white/50">Сортировка</h4>
+                <h4 className="text-xs font-medium text-white/50">{t.filters.sort}</h4>
               </div>
               <div className="flex flex-wrap gap-1.5">
                 {sortOptions.map((sort) => (

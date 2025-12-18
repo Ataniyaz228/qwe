@@ -65,16 +65,16 @@ export function Widgets() {
   }
 
   const quickActions = [
-    { icon: Code, label: 'Новый сниппет', href: '/new', color: 'from-blue-500/20 to-cyan-500/10' },
-    { icon: Terminal, label: 'Explore', href: '/explore', color: 'from-purple-500/20 to-pink-500/10' },
-    { icon: TrendingUp, label: 'Тренды', href: '/trending', color: 'from-orange-500/20 to-yellow-500/10' },
-    { icon: Users, label: 'Сообщество', href: '/explore', color: 'from-green-500/20 to-emerald-500/10' },
+    { icon: Code, label: t.widgets.newSnippet, href: '/new', color: 'from-blue-500/20 to-cyan-500/10' },
+    { icon: Terminal, label: t.nav.explore, href: '/explore', color: 'from-purple-500/20 to-pink-500/10' },
+    { icon: TrendingUp, label: t.nav.trending, href: '/trending', color: 'from-orange-500/20 to-yellow-500/10' },
+    { icon: Users, label: t.widgets.community, href: '/explore', color: 'from-green-500/20 to-emerald-500/10' },
   ]
 
   const stats = platformStats ? [
-    { icon: Heart, value: formatNumber(platformStats.total_likes), label: 'Всего лайков' },
-    { icon: MessageSquare, value: formatNumber(platformStats.total_comments), label: 'Комментариев' },
-    { icon: Eye, value: formatNumber(platformStats.total_views), label: 'Просмотров' },
+    { icon: Heart, value: formatNumber(platformStats.total_likes), label: t.widgets.totalLikes },
+    { icon: MessageSquare, value: formatNumber(platformStats.total_comments), label: t.widgets.commentsCount },
+    { icon: Eye, value: formatNumber(platformStats.total_views), label: t.widgets.viewsCount },
   ] : []
 
   return (
@@ -90,7 +90,7 @@ export function Widgets() {
             <div className="h-7 w-7 rounded-lg bg-white/[0.04] flex items-center justify-center">
               <Zap className="h-3.5 w-3.5 text-white/50" strokeWidth={1.5} />
             </div>
-            <h3 className="font-medium text-sm text-white/70">Быстрые действия</h3>
+            <h3 className="font-medium text-sm text-white/70">{t.widgets.quickActions}</h3>
           </div>
           <div className="grid grid-cols-2 gap-2">
             {quickActions.map((action, i) => (
@@ -130,7 +130,7 @@ export function Widgets() {
               </div>
               <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-green-500/80 animate-pulse" />
             </div>
-            <h3 className="font-medium text-sm text-white/70">Статистика</h3>
+            <h3 className="font-medium text-sm text-white/70">{t.widgets.statistics}</h3>
             <span className="ml-auto text-[10px] text-white/30 flex items-center gap-1">
               <Clock className="h-3 w-3" strokeWidth={1.5} />
               Live
@@ -170,7 +170,7 @@ export function Widgets() {
               <h3 className="font-medium text-sm text-white/70">{t.widgets.trendingNow}</h3>
             </div>
             <Link href="/trending" className="text-[10px] text-white/30 hover:text-white/50 transition-colors flex items-center gap-0.5">
-              Все <ArrowUpRight className="h-3 w-3" />
+              {t.widgets.viewAll} <ArrowUpRight className="h-3 w-3" />
             </Link>
           </div>
 
@@ -223,7 +223,7 @@ export function Widgets() {
               <h3 className="font-medium text-sm text-white/70">{t.widgets.topContributors}</h3>
             </div>
             <Link href="/explore" className="text-[10px] text-white/30 hover:text-white/50 transition-colors flex items-center gap-0.5">
-              Все <ArrowUpRight className="h-3 w-3" />
+              {t.widgets.viewAll} <ArrowUpRight className="h-3 w-3" />
             </Link>
           </div>
 
@@ -288,10 +288,10 @@ export function Widgets() {
           mounted ? "opacity-100" : "opacity-0"
         )}>
           <div className="flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-white/20">
-            <Link href="/about" className="hover:text-white/40 transition-colors">О нас</Link>
-            <Link href="/terms" className="hover:text-white/40 transition-colors">Условия</Link>
-            <Link href="/privacy" className="hover:text-white/40 transition-colors">Приватность</Link>
-            <Link href="/help" className="hover:text-white/40 transition-colors">Помощь</Link>
+            <Link href="/about" className="hover:text-white/40 transition-colors">{t.widgets.aboutUs}</Link>
+            <Link href="/terms" className="hover:text-white/40 transition-colors">{t.widgets.terms}</Link>
+            <Link href="/privacy" className="hover:text-white/40 transition-colors">{t.widgets.privacy}</Link>
+            <Link href="/help" className="hover:text-white/40 transition-colors">{t.widgets.help}</Link>
           </div>
           <p className="text-[9px] text-white/15 mt-2">© 2025 GitForum</p>
         </div>

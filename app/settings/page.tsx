@@ -21,10 +21,10 @@ export default function SettingsPage() {
   const [mounted, setMounted] = useState(false)
 
   const tabs = [
-    { id: "profile", label: t.settings.tabs.profile, icon: User, description: "Имя, аватар, био" },
-    { id: "appearance", label: t.settings.tabs.appearance, icon: Palette, description: "Тема, язык" },
-    { id: "notifications", label: t.settings.tabs.notifications, icon: Bell, description: "Email, push" },
-    { id: "account", label: t.settings.tabs.account, icon: Shield, description: "Пароль, безопасность" },
+    { id: "profile", label: t.settings.tabs.profile, icon: User, description: t.pages.settings.tabDescriptions.profile },
+    { id: "appearance", label: t.settings.tabs.appearance, icon: Palette, description: t.pages.settings.tabDescriptions.appearance },
+    { id: "notifications", label: t.settings.tabs.notifications, icon: Bell, description: t.pages.settings.tabDescriptions.notifications },
+    { id: "account", label: t.settings.tabs.account, icon: Shield, description: t.pages.settings.tabDescriptions.account },
   ]
 
   useEffect(() => {
@@ -74,8 +74,8 @@ export default function SettingsPage() {
                   <Settings className="h-5 w-5 text-white/50" strokeWidth={1.5} />
                 </div>
                 <div>
-                  <h1 className="text-xl font-semibold text-white/90">Настройки</h1>
-                  <p className="text-sm text-white/40">Управление аккаунтом и предпочтениями</p>
+                  <h1 className="text-xl font-semibold text-white/90">{t.pages.settings.title}</h1>
+                  <p className="text-sm text-white/40">{t.pages.settings.subtitle}</p>
                 </div>
               </div>
             </div>

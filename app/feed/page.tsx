@@ -10,9 +10,11 @@ import { Loader2, FileCode, Plus, RefreshCw, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
+import { useLanguage } from "@/contexts/LanguageContext"
 
 export default function FeedPage() {
   const { posts, isLoading, error, refresh, hasMore, loadMore } = usePosts()
+  const { t } = useLanguage()
   const [isLoadingMore, setIsLoadingMore] = useState(false)
   const [mounted, setMounted] = useState(false)
 
@@ -52,8 +54,8 @@ export default function FeedPage() {
                       <Sparkles className="h-4 w-4 text-white/50" strokeWidth={1.5} />
                     </div>
                     <div>
-                      <h1 className="text-lg font-semibold text-white/90">Лента</h1>
-                      <p className="text-xs text-white/30">Свежие публикации</p>
+                      <h1 className="text-lg font-semibold text-white/90">{t.feed.title}</h1>
+                      <p className="text-xs text-white/30">{t.feed.subtitle}</p>
                     </div>
                   </div>
                   <Button
@@ -64,7 +66,7 @@ export default function FeedPage() {
                     className="gap-1.5 text-white/40 hover:text-white/70 hover:bg-white/[0.04] rounded-lg"
                   >
                     <RefreshCw className={cn("h-4 w-4", isLoading && "animate-spin")} strokeWidth={1.5} />
-                    <span className="hidden sm:inline">Обновить</span>
+                    <span className="hidden sm:inline">{t.feed.refresh}</span>
                   </Button>
                 </div>
 
@@ -74,7 +76,7 @@ export default function FeedPage() {
                     <div className="h-12 w-12 rounded-2xl bg-white/[0.04] border border-white/[0.06] flex items-center justify-center mb-4">
                       <Loader2 className="h-5 w-5 animate-spin text-white/40" />
                     </div>
-                    <p className="text-sm text-white/30">Загрузка постов...</p>
+                    <p className="text-sm text-white/30">{t.feed.loadingPosts}</p>
                   </div>
                 )}
 
@@ -89,7 +91,7 @@ export default function FeedPage() {
                       variant="outline"
                       className="bg-white/[0.02] border-white/[0.06] text-white/60 hover:bg-white/[0.05] hover:text-white/80"
                     >
-                      Попробовать снова
+                      {t.feed.tryAgain}
                     </Button>
                   </div>
                 )}
@@ -103,14 +105,14 @@ export default function FeedPage() {
                     <div className="h-16 w-16 rounded-2xl bg-white/[0.04] border border-white/[0.06] flex items-center justify-center mb-5">
                       <FileCode className="h-7 w-7 text-white/40" strokeWidth={1.5} />
                     </div>
-                    <h3 className="text-lg font-medium text-white/80 mb-2">Пока нет постов</h3>
+                    <h3 className="text-lg font-medium text-white/80 mb-2">{t.feed.noPosts}</h3>
                     <p className="text-sm text-white/35 mb-6 max-w-xs">
-                      Станьте первым, кто поделится кодом с сообществом!
+                      {t.feed.beFirst}
                     </p>
                     <Link href="/new">
                       <Button className="gap-1.5 bg-white text-black hover:bg-white/90 rounded-xl font-medium">
                         <Plus className="h-4 w-4" strokeWidth={2} />
-                        Создать пост
+                        {t.feed.createPost}
                       </Button>
                     </Link>
                   </div>
@@ -144,10 +146,10 @@ export default function FeedPage() {
                       {isLoadingMore ? (
                         <>
                           <Loader2 className="h-4 w-4 animate-spin" />
-                          Загрузка...
+                          {t.feed.loading}
                         </>
                       ) : (
-                        "Показать ещё"
+                        t.feed.showMore
                       )}
                     </Button>
                   </div>

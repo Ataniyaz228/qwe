@@ -4,7 +4,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
-import { Code, TrendingUp, Bookmark, Hash, Users, FileCode, Star, Share2, Search, ChevronRight, Sparkles, Cpu, Rocket, ArrowRight, Zap, Lock, Wand2, Menu } from "lucide-react"
+import { Code, TrendingUp, Bookmark, Hash, Users, FileCode, Star, Share2, Search, ChevronRight, Sparkles, Cpu, Rocket, ArrowRight, Zap, Lock, Wand2, Menu, Globe } from "lucide-react"
 import { useLanguage } from "@/contexts/LanguageContext"
 import { cn } from "@/lib/utils"
 
@@ -64,7 +64,7 @@ function AnimatedCounter({ value, suffix = "" }: { value: string; suffix?: strin
 }
 
 export default function LandingPage() {
-  const { t } = useLanguage()
+  const { t, language, setLanguage } = useLanguage()
   const [mounted, setMounted] = useState(false)
   const [activeFeature, setActiveFeature] = useState(0)
 
@@ -115,18 +115,26 @@ export default function LandingPage() {
             {/* Center nav links */}
             <div className="hidden md:flex items-center gap-1">
               <Link href="/feed" className="px-4 py-2 text-sm text-white/50 hover:text-white/90 transition-colors rounded-lg hover:bg-white/[0.04]">
-                Лента
+                {t.nav.home}
               </Link>
               <Link href="/explore" className="px-4 py-2 text-sm text-white/50 hover:text-white/90 transition-colors rounded-lg hover:bg-white/[0.04]">
-                Поиск
+                {t.nav.explore}
               </Link>
               <Link href="/trending" className="px-4 py-2 text-sm text-white/50 hover:text-white/90 transition-colors rounded-lg hover:bg-white/[0.04]">
-                Тренды
+                {t.nav.trending}
               </Link>
             </div>
 
             {/* Right side */}
             <div className="flex items-center gap-3">
+              {/* Language Switcher */}
+              <button
+                onClick={() => setLanguage(language === 'ru' ? 'kk' : 'ru')}
+                className="flex items-center gap-1.5 px-3 py-2 text-sm text-white/50 hover:text-white/90 transition-colors rounded-lg hover:bg-white/[0.04]"
+              >
+                <Globe className="h-4 w-4" strokeWidth={1.5} />
+                <span className="uppercase text-xs font-medium">{language}</span>
+              </button>
               <Link href="/login">
                 <Button variant="ghost" size="sm" className="text-white/60 hover:text-white hover:bg-white/[0.04] transition-all">
                   {t.nav.login}
@@ -181,7 +189,7 @@ export default function LandingPage() {
                 </Link>
                 <Link href="/feed">
                   <Button size="lg" variant="outline" className="border-white/10 bg-white/[0.02] hover:bg-white/[0.05] text-white/60 hover:text-white/90 px-6 py-6 text-base rounded-xl transition-all">
-                    Explore
+                    {t.nav.explore}
                     <ArrowRight className="h-4 w-4 ml-2" />
                   </Button>
                 </Link>
@@ -200,7 +208,7 @@ export default function LandingPage() {
                   {[...Array(5)].map((_, i) => (
                     <Star key={i} className="h-3.5 w-3.5 text-white/20" strokeWidth={1.5} />
                   ))}
-                  <span className="text-xs text-white/30 ml-1">10+ языков программирования</span>
+                  <span className="text-xs text-white/30 ml-1">10+ {t.badges.programmingLanguages}</span>
                 </div>
               </div>
             </div>
@@ -264,19 +272,19 @@ export default function LandingPage() {
               <div className="absolute -top-3 -left-3 animate-float">
                 <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#0f0f11] border border-white/[0.08] text-white/50 text-xs font-medium backdrop-blur-xl">
                   <Zap className="h-3.5 w-3.5" strokeWidth={1.5} />
-                  Fast
+                  {t.badges.fast}
                 </div>
               </div>
               <div className="absolute -bottom-3 -right-3 animate-float animation-delay-1000">
                 <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#0f0f11] border border-white/[0.08] text-white/50 text-xs font-medium backdrop-blur-xl">
                   <Lock className="h-3.5 w-3.5" strokeWidth={1.5} />
-                  Secure
+                  {t.badges.secure}
                 </div>
               </div>
               <div className="absolute top-1/2 -right-5 animate-float animation-delay-2000">
                 <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#0f0f11] border border-white/[0.08] text-white/50 text-xs font-medium backdrop-blur-xl">
                   <Wand2 className="h-3.5 w-3.5" strokeWidth={1.5} />
-                  Modern
+                  {t.badges.modern}
                 </div>
               </div>
             </div>
@@ -290,7 +298,7 @@ export default function LandingPage() {
           <div className="text-center mb-16 space-y-4">
             <div className="inline-flex items-center gap-2 rounded-full bg-white/[0.03] border border-white/[0.06] px-4 py-1.5">
               <Sparkles className="h-3.5 w-3.5 text-white/35" strokeWidth={1.5} />
-              <span className="text-xs text-white/45">Features</span>
+              <span className="text-xs text-white/45">{t.common.features}</span>
             </div>
             <h2 className="text-4xl md:text-5xl font-bold text-white/90">
               {t.landing.features.title}

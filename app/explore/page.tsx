@@ -28,11 +28,12 @@ const languageColors: Record<string, { bg: string; dot: string; text: string }> 
 interface PostCardProps {
   post: Post
   index: number
+  noDescription: string
 }
 
-function PostCard({ post, index }: PostCardProps) {
+function PostCard({ post, index, noDescription }: PostCardProps) {
   const langColor = languageColors[post.language?.toLowerCase() || ""] || { bg: "bg-white/5", dot: "bg-white/40", text: "text-white/50" }
-  const tags = post.tags?.map((t: Tag) => t.name) || []
+  const tags = post.tags?.map((tag: Tag) => tag.name) || []
 
   return (
     <Link href={`/post/${post.id}`} className="block group">
@@ -64,7 +65,7 @@ function PostCard({ post, index }: PostCardProps) {
 
         {/* Description */}
         <p className="text-xs text-white/40 mb-3 line-clamp-2">
-          {post.description || "Нет описания"}
+          {post.description || noDescription}
         </p>
 
         {/* Tags */}
@@ -144,7 +145,7 @@ export default function ExplorePage() {
         setTags(tagsData.results || tagsData || [])
       } catch (err) {
         console.error("Error fetching data:", err)
-        setError("Ошибка загрузки данных")
+        setError(t.pages.explore.errorLoading)
       } finally {
         setIsLoading(false)
       }
@@ -282,8 +283,8 @@ export default function ExplorePage() {
             )}>
               {[
                 { icon: Flame, value: stats.trending, label: "Trending", color: "from-orange-500/20 to-red-500/10", iconColor: "text-orange-400" },
-                { icon: TrendingUp, value: stats.thisWeek, label: "За неделю", color: "from-green-500/20 to-emerald-500/10", iconColor: "text-green-400" },
-                { icon: Clock, value: stats.newToday, label: "Сегодня", color: "from-blue-500/20 to-cyan-500/10", iconColor: "text-blue-400" },
+                { icon: TrendingUp, value: stats.thisWeek, label: t.pages.explore.thisWeek, color: "from-green-500/20 to-emerald-500/10", iconColor: "text-green-400" },
+                { icon: Clock, value: stats.newToday, label: t.pages.explore.today, color: "from-blue-500/20 to-cyan-500/10", iconColor: "text-blue-400" },
               ].map((stat, i) => (
                 <div
                   key={stat.label}
@@ -305,7 +306,7 @@ export default function ExplorePage() {
               <div className="flex items-center gap-2 mb-4">
                 <Search className="h-4 w-4 text-white/30" strokeWidth={1.5} />
                 <p className="text-sm text-white/40">
-                  Найдено: <span className="text-white/60 font-medium">{filteredPosts.length}</span>
+                  {t.pages.explore.found}: <span className="text-white/60 font-medium">{filteredPosts.length}</span>
                 </p>
               </div>
             )}
@@ -316,7 +317,7 @@ export default function ExplorePage() {
                 <div className="h-12 w-12 rounded-2xl bg-white/[0.04] border border-white/[0.06] flex items-center justify-center mb-4">
                   <Loader2 className="h-5 w-5 animate-spin text-white/40" />
                 </div>
-                <p className="text-sm text-white/30">Загрузка...</p>
+                <p className="text-sm text-white/30">{t.pages.explore.loading}</p>
               </div>
             )}
 
@@ -338,7 +339,7 @@ export default function ExplorePage() {
                 {filteredPosts.length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {filteredPosts.map((post, index) => (
-                      <PostCard key={post.id} post={post} index={index} />
+                      <PostCard key={post.id} post={post} index={index} noDescription={t.pages.explore.noDescription} />
                     ))}
                   </div>
                 ) : (
@@ -346,11 +347,11 @@ export default function ExplorePage() {
                     <div className="h-16 w-16 rounded-2xl bg-white/[0.04] border border-white/[0.06] flex items-center justify-center mb-5">
                       <Sparkles className="h-7 w-7 text-white/30" strokeWidth={1.5} />
                     </div>
-                    <h3 className="text-lg font-medium text-white/60 mb-2">Ничего не найдено</h3>
+                    <h3 className="text-lg font-medium text-white/60 mb-2">{t.pages.explore.nothingFound}</h3>
                     <p className="text-sm text-white/30 max-w-xs">
                       {posts.length === 0
-                        ? "Пока нет постов. Будьте первым!"
-                        : "Попробуйте изменить фильтры или поисковый запрос"}
+                        ? t.pages.explore.noPosts
+                        : t.pages.explore.tryChangeFilters}
                     </p>
                   </div>
                 )}

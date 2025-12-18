@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Bell, Heart, MessageSquare, UserPlus, Reply, Check, Loader2, FileCode, Sparkles, BellOff } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useAuth } from "@/contexts/AuthContext"
+import { useLanguage } from "@/contexts/LanguageContext"
 import { notificationsAPI, type Notification } from "@/lib/api"
 import { toast } from "sonner"
 import Link from "next/link"
@@ -21,38 +22,44 @@ const iconMap: Record<string, typeof Bell> = {
   new_post: FileCode,
 }
 
-const messageMap: Record<string, string> = {
-  follow: "подписался(-ась) на вас",
-  like: "лайкнул(-а) ваш пост",
-  comment: "прокомментировал(-а) ваш пост",
-  reply: "ответил(-а) на ваш комментарий",
-  new_post: "опубликовал(-а) новый пост",
-}
-
-function formatTimeAgo(dateStr: string): string {
-  const date = new Date(dateStr)
-  const now = new Date()
-  const diff = now.getTime() - date.getTime()
-
-  const minutes = Math.floor(diff / 60000)
-  const hours = Math.floor(diff / 3600000)
-  const days = Math.floor(diff / 86400000)
-
-  if (minutes < 1) return "только что"
-  if (minutes < 60) return `${minutes}м`
-  if (hours < 24) return `${hours}ч`
-  if (days < 7) return `${days}д`
-  return date.toLocaleDateString("ru-RU")
-}
+// Function will be defined inside component to use translations
 
 export default function NotificationsPage() {
   const router = useRouter()
   const { isAuthenticated, isLoading: authLoading } = useAuth()
+  const { t, language } = useLanguage()
 
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [loading, setLoading] = useState(true)
   const [markingRead, setMarkingRead] = useState(false)
   const [mounted, setMounted] = useState(false)
+
+  // Translation-aware message map
+  const getMessageForType = (type: string) => {
+    const messages: Record<string, string> = {
+      follow: t.notifications.followed,
+      like: t.notifications.liked,
+      comment: t.notifications.commented,
+      reply: t.notifications.replied,
+      new_post: t.notifications.newPost,
+    }
+    return messages[type] || ''
+  }
+
+  // Translation-aware time formatter
+  const formatTimeAgo = (dateStr: string): string => {
+    const date = new Date(dateStr)
+    const now = new Date()
+    const diff = now.getTime() - date.getTime()
+    const minutes = Math.floor(diff / 60000)
+    const hours = Math.floor(diff / 3600000)
+    const days = Math.floor(diff / 86400000)
+    if (minutes < 1) return t.notifications.justNow
+    if (minutes < 60) return `${minutes}м`
+    if (hours < 24) return `${hours}ч`
+    if (days < 7) return `${days}д`
+    return date.toLocaleDateString(language === 'kk' ? 'kk-KZ' : 'ru-RU')
+  }
 
   useEffect(() => {
     setMounted(true)
@@ -86,9 +93,9 @@ export default function NotificationsPage() {
     try {
       await notificationsAPI.markAllRead()
       setNotifications(notifications.map(n => ({ ...n, is_read: true })))
-      toast.success("Все уведомления прочитаны")
+      toast.success(t.notifications.allMarkedRead)
     } catch (err) {
-      toast.error("Ошибка при обновлении")
+      toast.error(t.notifications.updateError)
     } finally {
       setMarkingRead(false)
     }
@@ -167,14 +174,14 @@ export default function NotificationsPage() {
                   <Bell className="h-5 w-5 text-white/50" strokeWidth={1.5} />
                 </div>
                 <div>
-                  <h1 className="text-lg font-semibold text-white/90">Уведомления</h1>
+                  <h1 className="text-lg font-semibold text-white/90">{t.notifications.title}</h1>
                   <p className="text-xs text-white/35">
                     {unreadCount > 0 ? (
                       <span className="flex items-center gap-1.5">
                         <span className="h-1.5 w-1.5 rounded-full bg-blue-400 animate-pulse" />
-                        {unreadCount} непрочитанных
+                        {unreadCount} {t.notifications.unread}
                       </span>
-                    ) : "Всё прочитано"}
+                    ) : t.notifications.allRead}
                   </p>
                 </div>
               </div>
@@ -191,7 +198,7 @@ export default function NotificationsPage() {
                   ) : (
                     <Check className="h-4 w-4" strokeWidth={1.5} />
                   )}
-                  Прочитать все
+                  {t.notifications.markAllRead}
                 </Button>
               )}
             </div>
@@ -202,10 +209,10 @@ export default function NotificationsPage() {
               mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
             )}>
               {[
-                { label: "Всего", value: notifications.length, icon: Bell },
-                { label: "Непрочитанных", value: unreadCount, icon: Sparkles },
+                { label: t.notifications.total, value: notifications.length, icon: Bell },
+                { label: t.notifications.unreadCount, value: unreadCount, icon: Sparkles },
                 {
-                  label: "Сегодня", value: notifications.filter(n => {
+                  label: t.notifications.today, value: notifications.filter(n => {
                     const today = new Date()
                     const notifDate = new Date(n.created_at)
                     return notifDate.toDateString() === today.toDateString()
@@ -228,7 +235,7 @@ export default function NotificationsPage() {
             {loading && (
               <div className="flex flex-col items-center justify-center py-16">
                 <Loader2 className="h-6 w-6 animate-spin text-white/30 mb-3" />
-                <p className="text-xs text-white/20">Загрузка...</p>
+                <p className="text-xs text-white/20">{t.notifications.loading}</p>
               </div>
             )}
 
@@ -241,13 +248,13 @@ export default function NotificationsPage() {
                 <div className="h-16 w-16 mx-auto mb-5 rounded-2xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-center">
                   <BellOff className="h-7 w-7 text-white/20" strokeWidth={1} />
                 </div>
-                <h3 className="font-medium text-white/60 mb-2">Нет уведомлений</h3>
+                <h3 className="font-medium text-white/60 mb-2">{t.notifications.empty}</h3>
                 <p className="text-sm text-white/30 mb-6 max-w-xs mx-auto">
-                  Здесь будут появляться уведомления о лайках, комментариях и подписках
+                  {t.notifications.emptySubtitle}
                 </p>
                 <Link href="/explore">
                   <Button variant="outline" className="gap-2 bg-white/[0.03] border-white/[0.08] text-white/60 hover:bg-white/[0.06] rounded-xl transition-all duration-300">
-                    Исследовать посты
+                    {t.notifications.explorePosts}
                   </Button>
                 </Link>
               </div>
@@ -303,7 +310,7 @@ export default function NotificationsPage() {
                               {notification.sender?.display_name || notification.sender?.username}
                             </span>{" "}
                             <span className="text-white/40">
-                              {messageMap[notification.notification_type]}
+                              {getMessageForType(notification.notification_type)}
                             </span>
                           </span>
                         </div>

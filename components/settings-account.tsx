@@ -21,6 +21,7 @@ import { useAuth } from "@/contexts/AuthContext"
 import { authAPI, postsAPI } from "@/lib/api"
 import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
+import { useLanguage } from "@/contexts/LanguageContext"
 
 const GoogleIcon = ({ className }: { className?: string }) => (
   <svg className={className} viewBox="0 0 24 24" fill="currentColor">
@@ -40,6 +41,7 @@ interface ConnectedAccount {
 export function SettingsAccount() {
   const router = useRouter()
   const { user, logout } = useAuth()
+  const { t } = useLanguage()
   const [showCurrentPassword, setShowCurrentPassword] = useState(false)
   const [showNewPassword, setShowNewPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
@@ -89,13 +91,13 @@ export function SettingsAccount() {
       })
       const data = await response.json()
       if (response.ok) {
-        toast.success(data.message || `${provider} отключен`)
+        toast.success(data.message || `${provider} ${t.settingsPage.disconnected}`)
         await loadConnectedAccounts()
       } else {
-        toast.error(data.error || 'Ошибка отключения')
+        toast.error(data.error || t.settingsPage.disconnectError)
       }
     } catch (err) {
-      toast.error('Ошибка при отключении аккаунта')
+      toast.error(t.settingsPage.disconnectAccountError)
     } finally {
       setDisconnecting(null)
     }
@@ -112,32 +114,32 @@ export function SettingsAccount() {
     if (/\d/.test(password)) score++
     if (/[^a-zA-Z0-9]/.test(password)) score++
 
-    if (score <= 1) return { score: 1, label: "Слабый", color: "bg-red-500" }
-    if (score <= 2) return { score: 2, label: "Средний", color: "bg-orange-500" }
-    if (score <= 3) return { score: 3, label: "Хороший", color: "bg-yellow-500" }
-    if (score <= 4) return { score: 4, label: "Сильный", color: "bg-green-500" }
-    return { score: 5, label: "Очень сильный", color: "bg-emerald-500" }
+    if (score <= 1) return { score: 1, label: t.settingsPage.weak, color: "bg-red-500" }
+    if (score <= 2) return { score: 2, label: t.settingsPage.medium, color: "bg-orange-500" }
+    if (score <= 3) return { score: 3, label: t.settingsPage.good, color: "bg-yellow-500" }
+    if (score <= 4) return { score: 4, label: t.settingsPage.strong, color: "bg-green-500" }
+    return { score: 5, label: t.settingsPage.veryStrong, color: "bg-emerald-500" }
   }, [passwords.new])
 
   const passwordRequirements = useMemo(() => {
     const password = passwords.new
     return [
-      { met: password.length >= 8, label: "Минимум 8 символов" },
-      { met: /[A-Z]/.test(password), label: "Заглавная буква" },
-      { met: /[a-z]/.test(password), label: "Строчная буква" },
-      { met: /\d/.test(password), label: "Цифра" },
-      { met: /[^a-zA-Z0-9]/.test(password), label: "Спецсимвол" },
+      { met: password.length >= 8, label: t.settingsPage.min8chars },
+      { met: /[A-Z]/.test(password), label: t.settingsPage.uppercase },
+      { met: /[a-z]/.test(password), label: t.settingsPage.lowercase },
+      { met: /\d/.test(password), label: t.settingsPage.digit },
+      { met: /[^a-zA-Z0-9]/.test(password), label: t.settingsPage.special },
     ]
   }, [passwords.new])
 
   const validatePasswordForm = () => {
     const newErrors: Record<string, string> = {}
 
-    if (!passwords.current) newErrors.current = "Введите текущий пароль"
-    if (!passwords.new) newErrors.new = "Введите новый пароль"
-    else if (passwords.new.length < 8) newErrors.new = "Минимум 8 символов"
-    if (!passwords.confirm) newErrors.confirm = "Подтвердите пароль"
-    else if (passwords.new !== passwords.confirm) newErrors.confirm = "Пароли не совпадают"
+    if (!passwords.current) newErrors.current = t.settingsPage.enterCurrentPassword
+    if (!passwords.new) newErrors.new = t.settingsPage.enterNewPassword
+    else if (passwords.new.length < 8) newErrors.new = t.settingsPage.minChars
+    if (!passwords.confirm) newErrors.confirm = t.settingsPage.confirmPasswordRequired
+    else if (passwords.new !== passwords.confirm) newErrors.confirm = t.settingsPage.passwordsDontMatch
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -145,7 +147,7 @@ export function SettingsAccount() {
 
   const handleUpdatePassword = async () => {
     if (!validatePasswordForm()) {
-      toast.error("Исправьте ошибки")
+      toast.error(t.settingsPage.fixErrors)
       return
     }
 
@@ -153,9 +155,9 @@ export function SettingsAccount() {
     try {
       await authAPI.changePassword(passwords.current, passwords.new, passwords.confirm)
       setPasswords({ current: "", new: "", confirm: "" })
-      toast.success("Пароль изменён!")
+      toast.success(t.settingsPage.passwordChanged)
     } catch (err) {
-      toast.error("Проверьте текущий пароль")
+      toast.error(t.settingsPage.checkCurrentPassword)
     } finally {
       setSavingPassword(false)
     }
@@ -190,9 +192,9 @@ export function SettingsAccount() {
       document.body.removeChild(a)
       URL.revokeObjectURL(url)
 
-      toast.success("Данные экспортированы!")
+      toast.success(t.settingsPage.dataExported)
     } catch (err) {
-      toast.error("Ошибка экспорта")
+      toast.error(t.settingsPage.exportError)
     } finally {
       setExporting(false)
     }
@@ -203,9 +205,9 @@ export function SettingsAccount() {
     try {
       await logout()
       router.push("/")
-      toast.success("Вы вышли со всех устройств")
+      toast.success(t.settingsPage.loggedOutAll)
     } catch (err) {
-      toast.error("Ошибка при выходе")
+      toast.error(t.settingsPage.logoutError)
     } finally {
       setLoggingOut(false)
     }
@@ -248,15 +250,15 @@ export function SettingsAccount() {
         <div className="flex items-center gap-2 mb-3">
           <Key className="h-4 w-4 text-white/50" strokeWidth={1.5} />
           <div>
-            <h3 className="text-sm font-medium text-white/70">Смена пароля</h3>
-            <p className="text-[11px] text-white/30">Обновите пароль аккаунта</p>
+            <h3 className="text-sm font-medium text-white/70">{t.settingsPage.changePassword}</h3>
+            <p className="text-[11px] text-white/30">{t.settingsPage.updateAccountPassword}</p>
           </div>
         </div>
 
         <div className="space-y-4 max-w-md">
           <PasswordInput
             id="currentPassword"
-            label="Текущий пароль"
+            label={t.settingsPage.currentPassword}
             value={passwords.current}
             onChange={(v) => setPasswords({ ...passwords, current: v })}
             show={showCurrentPassword}
@@ -266,7 +268,7 @@ export function SettingsAccount() {
 
           <PasswordInput
             id="newPassword"
-            label="Новый пароль"
+            label={t.settingsPage.newPassword}
             value={passwords.new}
             onChange={(v) => setPasswords({ ...passwords, new: v })}
             show={showNewPassword}
@@ -295,7 +297,7 @@ export function SettingsAccount() {
 
           <PasswordInput
             id="confirmPassword"
-            label="Подтвердите пароль"
+            label={t.settingsPage.confirmPassword}
             value={passwords.confirm}
             onChange={(v) => setPasswords({ ...passwords, confirm: v })}
             show={showConfirmPassword}
@@ -303,7 +305,7 @@ export function SettingsAccount() {
             error={errors.confirm}
           />
           {passwords.confirm && passwords.new === passwords.confirm && !errors.confirm && (
-            <p className="text-[10px] text-green-400 flex items-center gap-1"><Check className="h-3 w-3" strokeWidth={2} /> Пароли совпадают</p>
+            <p className="text-[10px] text-green-400 flex items-center gap-1"><Check className="h-3 w-3" strokeWidth={2} /> {t.settingsPage.passwordsMatch}</p>
           )}
 
           <Button
@@ -312,7 +314,7 @@ export function SettingsAccount() {
             disabled={savingPassword}
           >
             {savingPassword ? <Loader2 className="h-4 w-4 animate-spin" /> : <Lock className="h-4 w-4" strokeWidth={2} />}
-            {savingPassword ? "Сохранение..." : "Сменить пароль"}
+            {savingPassword ? t.settingsPage.saving : t.settingsPage.changePasswordBtn}
           </Button>
         </div>
       </div>
@@ -322,18 +324,18 @@ export function SettingsAccount() {
         <div className="flex items-center gap-2 mb-3">
           <Shield className="h-4 w-4 text-white/50" strokeWidth={1.5} />
           <div>
-            <h3 className="text-sm font-medium text-white/70">Двухфакторная аутентификация</h3>
-            <p className="text-[11px] text-white/30">Дополнительная защита</p>
+            <h3 className="text-sm font-medium text-white/70">{t.settingsPage.twoFactor}</h3>
+            <p className="text-[11px] text-white/30">{t.settingsPage.additionalSecurity}</p>
           </div>
         </div>
-        <p className="text-xs text-white/35 mb-3">Добавьте дополнительный уровень безопасности.</p>
+        <p className="text-xs text-white/35 mb-3">{t.settingsPage.twoFactorDesc}</p>
         <Button
           variant="outline"
           className="gap-2 bg-white/[0.02] border-white/[0.06] text-white/60 hover:bg-white/[0.05] hover:text-white/80 rounded-xl"
-          onClick={() => toast.info("2FA будет доступна в будущих обновлениях")}
+          onClick={() => toast.info(t.settingsPage.twoFactorFuture)}
         >
           <Shield className="h-4 w-4" strokeWidth={1.5} />
-          Включить 2FA
+          {t.settingsPage.enable2FA}
         </Button>
       </div>
 
@@ -342,8 +344,8 @@ export function SettingsAccount() {
         <div className="flex items-center gap-2 mb-3">
           <Link2 className="h-4 w-4 text-white/50" strokeWidth={1.5} />
           <div>
-            <h3 className="text-sm font-medium text-white/70">Привязанные аккаунты</h3>
-            <p className="text-[11px] text-white/30">OAuth провайдеры</p>
+            <h3 className="text-sm font-medium text-white/70">{t.settingsPage.connectedAccounts}</h3>
+            <p className="text-[11px] text-white/30">{t.settingsPage.oauthProviders}</p>
           </div>
         </div>
 
@@ -360,7 +362,7 @@ export function SettingsAccount() {
                 <div>
                   <p className="text-sm font-medium text-white/70">Google</p>
                   <p className="text-[10px] text-white/30">
-                    {connectedAccounts.find(a => a.provider === 'google')?.email || 'Не подключено'}
+                    {connectedAccounts.find(a => a.provider === 'google')?.email || t.settingsPage.notConnected}
                   </p>
                 </div>
               </div>
@@ -373,7 +375,7 @@ export function SettingsAccount() {
                   disabled={disconnecting === 'google'}
                 >
                   {disconnecting === 'google' ? <Loader2 className="h-3 w-3 animate-spin" /> : <Unlink className="h-3 w-3" strokeWidth={1.5} />}
-                  Отключить
+                  {t.settingsPage.disconnect}
                 </Button>
               ) : (
                 <Button
@@ -382,7 +384,7 @@ export function SettingsAccount() {
                   className="gap-1 bg-white/[0.02] border-white/[0.06] text-white/60 hover:bg-white/[0.05] rounded-lg"
                   onClick={() => window.location.href = 'http://localhost:8000/accounts/google/login/'}
                 >
-                  Подключить
+                  {t.settingsPage.connect}
                 </Button>
               )}
             </div>
@@ -394,7 +396,7 @@ export function SettingsAccount() {
                 <div>
                   <p className="text-sm font-medium text-white/70">GitHub</p>
                   <p className="text-[10px] text-white/30">
-                    {connectedAccounts.find(a => a.provider === 'github')?.name || 'Не подключено'}
+                    {connectedAccounts.find(a => a.provider === 'github')?.name || t.settingsPage.notConnected}
                   </p>
                 </div>
               </div>
@@ -407,7 +409,7 @@ export function SettingsAccount() {
                   disabled={disconnecting === 'github'}
                 >
                   {disconnecting === 'github' ? <Loader2 className="h-3 w-3 animate-spin" /> : <Unlink className="h-3 w-3" strokeWidth={1.5} />}
-                  Отключить
+                  {t.settingsPage.disconnect}
                 </Button>
               ) : (
                 <Button
@@ -416,7 +418,7 @@ export function SettingsAccount() {
                   className="gap-1 bg-white/[0.02] border-white/[0.06] text-white/60 hover:bg-white/[0.05] rounded-lg"
                   onClick={() => window.location.href = 'http://localhost:8000/accounts/github/login/'}
                 >
-                  Подключить
+                  {t.settingsPage.connect}
                 </Button>
               )}
             </div>
@@ -429,11 +431,11 @@ export function SettingsAccount() {
         <div className="flex items-center gap-2 mb-3">
           <LogOut className="h-4 w-4 text-white/50" strokeWidth={1.5} />
           <div>
-            <h3 className="text-sm font-medium text-white/70">Сессии</h3>
-            <p className="text-[11px] text-white/30">Управление входом</p>
+            <h3 className="text-sm font-medium text-white/70">{t.settingsPage.sessions}</h3>
+            <p className="text-[11px] text-white/30">{t.settingsPage.sessionManagement}</p>
           </div>
         </div>
-        <p className="text-xs text-white/35 mb-3">Выйти из аккаунта на всех устройствах.</p>
+        <p className="text-xs text-white/35 mb-3">{t.settingsPage.logoutAllDesc}</p>
         <Button
           variant="outline"
           className="gap-2 bg-white/[0.02] border-white/[0.06] text-white/60 hover:bg-white/[0.05] hover:text-white/80 rounded-xl"
@@ -441,7 +443,7 @@ export function SettingsAccount() {
           disabled={loggingOut}
         >
           {loggingOut ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogOut className="h-4 w-4" strokeWidth={1.5} />}
-          Выйти со всех устройств
+          {t.settingsPage.logoutAllDevices}
         </Button>
       </div>
 
@@ -450,8 +452,8 @@ export function SettingsAccount() {
         <div className="flex items-center gap-2 mb-3">
           <Download className="h-4 w-4 text-white/50" strokeWidth={1.5} />
           <div>
-            <h3 className="text-sm font-medium text-white/70">Экспорт данных</h3>
-            <p className="text-[11px] text-white/30">Скачайте копию данных</p>
+            <h3 className="text-sm font-medium text-white/70">{t.settingsPage.exportData}</h3>
+            <p className="text-[11px] text-white/30">{t.settingsPage.downloadDataCopy}</p>
           </div>
         </div>
         <Button
@@ -461,7 +463,7 @@ export function SettingsAccount() {
           disabled={exporting}
         >
           {exporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" strokeWidth={1.5} />}
-          {exporting ? "Экспортируем..." : "Экспорт данных"}
+          {exporting ? t.settingsPage.exporting : t.settingsPage.exportDataBtn}
         </Button>
       </div>
 
@@ -470,32 +472,32 @@ export function SettingsAccount() {
         <div className="flex items-center gap-2 mb-3">
           <AlertTriangle className="h-4 w-4 text-red-400" strokeWidth={1.5} />
           <div>
-            <h3 className="text-sm font-medium text-red-400">Опасная зона</h3>
-            <p className="text-[11px] text-red-400/50">Необратимые действия</p>
+            <h3 className="text-sm font-medium text-red-400">{t.settingsPage.dangerZone}</h3>
+            <p className="text-[11px] text-red-400/50">{t.settingsPage.irreversibleActions}</p>
           </div>
         </div>
-        <p className="text-xs text-white/35 mb-3">После удаления аккаунта все данные будут удалены безвозвратно.</p>
+        <p className="text-xs text-white/35 mb-3">{t.settingsPage.deleteAccountWarning}</p>
         <AlertDialog>
           <AlertDialogTrigger asChild>
             <Button variant="destructive" className="gap-2 rounded-xl">
               <Trash2 className="h-4 w-4" strokeWidth={1.5} />
-              Удалить аккаунт
+              {t.settingsPage.deleteAccount}
             </Button>
           </AlertDialogTrigger>
           <AlertDialogContent className="bg-[#0c0c0e] border-white/[0.06]">
             <AlertDialogHeader>
-              <AlertDialogTitle className="text-white/90">Вы уверены?</AlertDialogTitle>
+              <AlertDialogTitle className="text-white/90">{t.settingsPage.areYouSure}</AlertDialogTitle>
               <AlertDialogDescription className="text-white/40">
-                Это действие нельзя отменить. Все данные будут удалены навсегда.
+                {t.settingsPage.deleteConfirmation}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel className="bg-white/[0.04] border-white/[0.06] text-white/60 hover:bg-white/[0.08]">Отмена</AlertDialogCancel>
+              <AlertDialogCancel className="bg-white/[0.04] border-white/[0.06] text-white/60 hover:bg-white/[0.08]">{t.settingsPage.cancel}</AlertDialogCancel>
               <AlertDialogAction
                 className="bg-red-500 text-white hover:bg-red-600"
-                onClick={() => toast.info("Удаление аккаунта будет доступно в будущих обновлениях")}
+                onClick={() => toast.info(t.settingsPage.deleteFuture)}
               >
-                Удалить аккаунт
+                {t.settingsPage.deleteAccount}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

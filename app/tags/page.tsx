@@ -200,7 +200,7 @@ export default function TagsPage() {
                   </div>
                   <div>
                     <p className="text-2xl font-bold text-white/80 group-hover:text-white transition-colors">{stats.totalTags}</p>
-                    <p className="text-xs text-white/35">Всего тегов</p>
+                    <p className="text-xs text-white/35">{t.pages.tags.totalTags}</p>
                   </div>
                 </div>
               </div>
@@ -211,7 +211,7 @@ export default function TagsPage() {
                   </div>
                   <div>
                     <p className="text-2xl font-bold text-white/80 group-hover:text-white transition-colors">{stats.totalPosts}</p>
-                    <p className="text-xs text-white/35">Всего постов</p>
+                    <p className="text-xs text-white/35">{t.pages.tags.totalPosts}</p>
                   </div>
                 </div>
               </div>
@@ -222,7 +222,7 @@ export default function TagsPage() {
                   </div>
                   <div>
                     <p className="text-lg font-bold text-white/80 group-hover:text-white transition-colors">#{stats.topTag}</p>
-                    <p className="text-xs text-white/35">Топ тег</p>
+                    <p className="text-xs text-white/35">{t.pages.tags.topTag}</p>
                   </div>
                 </div>
               </div>
@@ -236,7 +236,7 @@ export default function TagsPage() {
               )}>
                 <div className="flex items-center gap-2 mb-4">
                   <Sparkles className="h-4 w-4 text-white/40" strokeWidth={1.5} />
-                  <h3 className="text-sm font-medium text-white/60">Популярные теги</h3>
+                  <h3 className="text-sm font-medium text-white/60">{t.pages.tags.popularTags}</h3>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {topTags.map((tag, i) => {
@@ -348,7 +348,7 @@ export default function TagsPage() {
               <div className="flex items-center gap-2 mb-4">
                 <Search className="h-4 w-4 text-white/30" strokeWidth={1.5} />
                 <p className="text-sm text-white/40">
-                  Найдено: <span className="text-white/60 font-medium">{filteredTags.length}</span>
+                  {t.pages.tags.found}: <span className="text-white/60 font-medium">{filteredTags.length}</span>
                 </p>
               </div>
             )}
@@ -359,7 +359,7 @@ export default function TagsPage() {
                 <div className="h-12 w-12 rounded-2xl bg-white/[0.04] border border-white/[0.06] flex items-center justify-center mb-4">
                   <Loader2 className="h-5 w-5 animate-spin text-white/40" />
                 </div>
-                <p className="text-sm text-white/30">Загрузка тегов...</p>
+                <p className="text-sm text-white/30">{t.pages.tags.loadingTags}</p>
               </div>
             )}
 

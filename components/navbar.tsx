@@ -163,7 +163,7 @@ export function Navbar() {
                 {!hasResults && !isSearching && (
                   <div className="p-6 text-center">
                     <Search className="h-8 w-8 mx-auto mb-2 text-white/10" strokeWidth={1} />
-                    <p className="text-white/30 text-sm">Ничего не найдено</p>
+                    <p className="text-white/30 text-sm">{t.search.noResults}</p>
                   </div>
                 )}
 
@@ -171,7 +171,7 @@ export function Navbar() {
                   <div>
                     <div className="px-3 py-2 text-[10px] font-medium text-white/30 uppercase tracking-wider bg-white/[0.02] border-b border-white/[0.04] flex items-center gap-2">
                       <User className="h-3 w-3" strokeWidth={1.5} />
-                      Пользователи
+                      {t.search.users}
                     </div>
                     {searchResults.users.map((u, i) => (
                       <Link
@@ -198,7 +198,7 @@ export function Navbar() {
                   <div>
                     <div className="px-3 py-2 text-[10px] font-medium text-white/30 uppercase tracking-wider bg-white/[0.02] border-b border-white/[0.04] flex items-center gap-2">
                       <FileCode className="h-3 w-3" strokeWidth={1.5} />
-                      Посты
+                      {t.search.posts}
                     </div>
                     {searchResults.posts.map((p, i) => (
                       <Link
@@ -297,7 +297,7 @@ export function Navbar() {
                     <DropdownMenuItem asChild className="rounded-lg text-white/60 hover:text-white hover:bg-white/[0.06] focus:bg-white/[0.06] cursor-pointer py-2.5">
                       <Link href="/bookmarks" className="flex items-center">
                         <Bookmark className="mr-3 h-4 w-4" strokeWidth={1.5} />
-                        Закладки
+                        {t.nav.bookmarks}
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild className="rounded-lg text-white/60 hover:text-white hover:bg-white/[0.06] focus:bg-white/[0.06] cursor-pointer py-2.5">

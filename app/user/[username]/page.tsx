@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { usersAPI, type User, type Post } from "@/lib/api"
 import { useAuth } from "@/contexts/AuthContext"
+import { useLanguage } from "@/contexts/LanguageContext"
 import {
     Loader2,
     MapPin,
@@ -52,9 +53,10 @@ function formatDate(date: string) {
 interface PostCardProps {
     post: Post
     index: number
+    noDescription: string
 }
 
-function PostCard({ post, index }: PostCardProps) {
+function PostCard({ post, index, noDescription }: PostCardProps) {
     const langColor = languageColors[post.language?.toLowerCase() || ""] || "bg-white/30"
 
     return (
@@ -78,7 +80,7 @@ function PostCard({ post, index }: PostCardProps) {
                             {post.title || post.filename}
                         </h3>
                         <p className="text-xs text-white/35 mt-1 line-clamp-2">
-                            {post.description || "Нет описания"}
+                            {post.description || noDescription}
                         </p>
                     </div>
                     <div className="opacity-0 group-hover:opacity-100 transition-opacity">
@@ -108,6 +110,7 @@ export default function UserProfilePage() {
     const params = useParams()
     const username = params.username as string
     const { user: currentUser, isAuthenticated } = useAuth()
+    const { t } = useLanguage()
 
     const [user, setUser] = useState<User | null>(null)
     const [posts, setPosts] = useState<Post[]>([])
@@ -199,7 +202,7 @@ export default function UserProfilePage() {
                             <div className="h-16 w-16 mx-auto mb-4 rounded-2xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-center">
                                 <UserX className="h-7 w-7 text-white/20" strokeWidth={1} />
                             </div>
-                            <h1 className="text-lg font-medium text-white/70 mb-1">Пользователь не найден</h1>
+                            <h1 className="text-lg font-medium text-white/70 mb-1">{t.pages.user.userNotFound}</h1>
                             <p className="text-sm text-white/30">@{username}</p>
                         </div>
                     </main>
@@ -301,12 +304,12 @@ export default function UserProfilePage() {
                                                     ) : isFollowing ? (
                                                         <>
                                                             <UserMinus className="h-4 w-4" strokeWidth={1.5} />
-                                                            Отписаться
+                                                            {t.pages.user.unfollow}
                                                         </>
                                                     ) : (
                                                         <>
                                                             <UserPlus className="h-4 w-4" strokeWidth={2} />
-                                                            Подписаться
+                                                            {t.pages.user.follow}
                                                         </>
                                                     )}
                                                 </Button>
@@ -314,7 +317,7 @@ export default function UserProfilePage() {
                                                 <Link href="/settings">
                                                     <Button className="gap-2 bg-white text-black hover:bg-white/90 rounded-xl font-medium transition-all duration-300 hover:scale-105">
                                                         <Settings className="h-4 w-4" strokeWidth={2} />
-                                                        Настройки
+                                                        {t.pages.user.settings}
                                                     </Button>
                                                 </Link>
                                             )}
@@ -360,9 +363,9 @@ export default function UserProfilePage() {
                             mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
                         )}>
                             {[
-                                { label: "Постов", value: user.posts_count || 0, icon: FileCode },
-                                { label: "Подписчиков", value: user.followers_count || 0, icon: Users },
-                                { label: "Подписки", value: user.following_count || 0, icon: UserPlus },
+                                { label: t.pages.user.posts, value: user.posts_count || 0, icon: FileCode },
+                                { label: t.pages.user.followers, value: user.followers_count || 0, icon: Users },
+                                { label: t.pages.user.following, value: user.following_count || 0, icon: UserPlus },
                             ].map((stat, i) => (
                                 <div
                                     key={stat.label}
@@ -384,7 +387,7 @@ export default function UserProfilePage() {
                                 <div className="h-8 w-8 rounded-lg bg-white/[0.04] border border-white/[0.06] flex items-center justify-center">
                                     <Code2 className="h-4 w-4 text-white/40" strokeWidth={1.5} />
                                 </div>
-                                <h2 className="text-sm font-medium text-white/60">Посты ({posts.length})</h2>
+                                <h2 className="text-sm font-medium text-white/60">{t.pages.user.postsTab} ({posts.length})</h2>
                             </div>
 
                             {posts.length === 0 ? (
@@ -392,13 +395,13 @@ export default function UserProfilePage() {
                                     <div className="h-16 w-16 mx-auto mb-5 rounded-2xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-center">
                                         <Code2 className="h-7 w-7 text-white/20" strokeWidth={1} />
                                     </div>
-                                    <h3 className="font-medium text-white/60 mb-2">Пока нет постов</h3>
-                                    <p className="text-sm text-white/30">Пользователь ещё не опубликовал код</p>
+                                    <h3 className="font-medium text-white/60 mb-2">{t.pages.user.noPosts}</h3>
+                                    <p className="text-sm text-white/30">{t.pages.user.userHasNoPosts}</p>
                                 </div>
                             ) : (
                                 <div className="space-y-3">
                                     {posts.map((post, i) => (
-                                        <PostCard key={post.id} post={post} index={i} />
+                                        <PostCard key={post.id} post={post} index={i} noDescription={t.pages.user.noDescription} />
                                     ))}
                                 </div>
                             )}

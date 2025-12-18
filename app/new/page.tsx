@@ -16,6 +16,7 @@ import { useAuth } from "@/contexts/AuthContext"
 import { postsAPI } from "@/lib/api"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
+import { useLanguage } from "@/contexts/LanguageContext"
 
 const languages = [
   { value: "javascript", label: "JavaScript", dot: "bg-yellow-400" },
@@ -40,6 +41,7 @@ const suggestedTags = [
 export default function NewPostPage() {
   const router = useRouter()
   const { user, isAuthenticated } = useAuth()
+  const { t } = useLanguage()
 
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
@@ -80,10 +82,10 @@ export default function NewPostPage() {
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {}
 
-    if (!title.trim()) newErrors.title = "Введите заголовок"
-    if (!filename.trim()) newErrors.filename = "Введите имя файла"
-    if (!language) newErrors.language = "Выберите язык"
-    if (!code.trim()) newErrors.code = "Введите код"
+    if (!title.trim()) newErrors.title = t.validation.enterTitle
+    if (!filename.trim()) newErrors.filename = t.validation.enterFilename
+    if (!language) newErrors.language = t.validation.selectLanguage
+    if (!code.trim()) newErrors.code = t.validation.enterCode
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -93,7 +95,7 @@ export default function NewPostPage() {
     if (!validateForm()) return
 
     if (!isAuthenticated) {
-      toast.error("Войдите в аккаунт")
+      toast.error(t.newPost.loginRequired)
       router.push("/login")
       return
     }
@@ -110,11 +112,11 @@ export default function NewPostPage() {
         tags,
       })
 
-      toast.success("Пост опубликован!")
+      toast.success(t.newPost.published)
       router.push("/feed")
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Ошибка"
-      toast.error("Ошибка: " + message)
+      const message = err instanceof Error ? err.message : t.common.error
+      toast.error(t.common.error + ": " + message)
     } finally {
       setIsSubmitting(false)
     }
@@ -124,7 +126,7 @@ export default function NewPostPage() {
     localStorage.setItem("draft_post", JSON.stringify({
       title, description, code, language, filename, tags, isPublic
     }))
-    toast.success("Черновик сохранён")
+    toast.success(t.newPost.draftSaved)
   }
 
   const selectedLang = languages.find((l) => l.value === language)
@@ -153,8 +155,8 @@ export default function NewPostPage() {
                   <FileCode className="h-5 w-5 text-white/50" strokeWidth={1.5} />
                 </div>
                 <div>
-                  <h1 className="text-xl font-semibold text-white/90">Новый пост</h1>
-                  <p className="text-xs text-white/35">Поделитесь кодом с сообществом</p>
+                  <h1 className="text-xl font-semibold text-white/90">{t.newPost.title}</h1>
+                  <p className="text-xs text-white/35">{t.newPost.subtitle}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
@@ -162,7 +164,7 @@ export default function NewPostPage() {
                   <Switch checked={isPublic} onCheckedChange={setIsPublic} />
                   <span className="text-xs text-white/40 flex items-center gap-1.5">
                     {isPublic ? <Globe className="h-3 w-3" strokeWidth={1.5} /> : <Lock className="h-3 w-3" strokeWidth={1.5} />}
-                    {isPublic ? "Публичный" : "Приватный"}
+                    {isPublic ? t.newPost.public : t.newPost.private}
                   </span>
                 </div>
                 <Button
@@ -173,7 +175,7 @@ export default function NewPostPage() {
                   className="hidden sm:flex gap-1.5 bg-white/[0.02] border-white/[0.06] text-white/50 hover:bg-white/[0.05] hover:text-white/70 rounded-lg"
                 >
                   <Save className="h-4 w-4" strokeWidth={1.5} />
-                  Черновик
+                  {t.newPost.draft}
                 </Button>
                 <Button
                   onClick={handleSubmit}
@@ -184,13 +186,13 @@ export default function NewPostPage() {
                   {isSubmitting ? (
                     <>
                       <Loader2 className="h-4 w-4 animate-spin" />
-                      <span className="hidden sm:inline">Публикация...</span>
+                      <span className="hidden sm:inline">{t.newPost.publishing}</span>
                     </>
                   ) : (
                     <>
                       <Sparkles className="h-4 w-4" strokeWidth={2} />
-                      <span className="hidden sm:inline">Опубликовать</span>
-                      <span className="sm:hidden">Создать</span>
+                      <span className="hidden sm:inline">{t.newPost.publish}</span>
+                      <span className="sm:hidden">{t.newPost.create}</span>
                     </>
                   )}
                 </Button>
@@ -206,11 +208,11 @@ export default function NewPostPage() {
               <div className="space-y-2 p-5 rounded-2xl bg-white/[0.02] border border-white/[0.04]">
                 <Label htmlFor="title" className="text-xs text-white/50 flex items-center gap-2">
                   <Type className="h-3 w-3" strokeWidth={1.5} />
-                  Заголовок
+                  {t.newPost.titleLabel}
                 </Label>
                 <Input
                   id="title"
-                  placeholder="Например: Кастомный React хук для debounce"
+                  placeholder={t.newPost.titlePlaceholder}
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   className={cn(
@@ -225,11 +227,11 @@ export default function NewPostPage() {
               <div className="space-y-2 p-5 rounded-2xl bg-white/[0.02] border border-white/[0.04]">
                 <Label htmlFor="description" className="text-xs text-white/50 flex items-center gap-2">
                   <FileText className="h-3 w-3" strokeWidth={1.5} />
-                  Описание
+                  {t.newPost.descriptionLabel}
                 </Label>
                 <Textarea
                   id="description"
-                  placeholder="Кратко опишите, что делает ваш код..."
+                  placeholder={t.newPost.descriptionPlaceholder}
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   className="bg-white/[0.03] border-white/[0.06] text-white placeholder:text-white/25 focus:border-white/[0.12] focus-visible:ring-0 rounded-xl min-h-[100px] resize-none"
@@ -241,14 +243,14 @@ export default function NewPostPage() {
                 <div className="space-y-2 p-5 rounded-2xl bg-white/[0.02] border border-white/[0.04]">
                   <Label className="text-xs text-white/50 flex items-center gap-2">
                     <Code className="h-3 w-3" strokeWidth={1.5} />
-                    Язык
+                    {t.newPost.languageLabel}
                   </Label>
                   <Select value={language} onValueChange={setLanguage}>
                     <SelectTrigger className={cn(
                       "h-10 bg-white/[0.03] border-white/[0.06] text-white rounded-xl",
                       errors.language && "border-red-500/50"
                     )}>
-                      <SelectValue placeholder="Выберите язык" />
+                      <SelectValue placeholder={t.newPost.selectLanguage} />
                     </SelectTrigger>
                     <SelectContent className="bg-[#0c0c0e] border-white/[0.06]">
                       {languages.map((lang) => (
@@ -266,11 +268,11 @@ export default function NewPostPage() {
                 <div className="space-y-2 p-5 rounded-2xl bg-white/[0.02] border border-white/[0.04]">
                   <Label htmlFor="filename" className="text-xs text-white/50 flex items-center gap-2">
                     <FileCode className="h-3 w-3" strokeWidth={1.5} />
-                    Имя файла
+                    {t.newPost.filenameLabel}
                   </Label>
                   <Input
                     id="filename"
-                    placeholder="Например: useDebounce.ts"
+                    placeholder={t.newPost.filenamePlaceholder}
                     value={filename}
                     onChange={(e) => setFilename(e.target.value)}
                     className={cn(
@@ -285,7 +287,7 @@ export default function NewPostPage() {
               {/* Code Editor */}
               <div className="space-y-2 p-5 rounded-2xl bg-white/[0.02] border border-white/[0.04]">
                 <div className="flex items-center justify-between mb-3">
-                  <Label className="text-xs text-white/50">Код</Label>
+                  <Label className="text-xs text-white/50">{t.newPost.codeLabel}</Label>
                   <div className="flex rounded-lg bg-white/[0.02] border border-white/[0.04] p-0.5">
                     <button
                       onClick={() => setActiveTab("write")}
@@ -297,7 +299,7 @@ export default function NewPostPage() {
                       )}
                     >
                       <Code className="h-3.5 w-3.5" strokeWidth={1.5} />
-                      Редактор
+                      {t.newPost.editor}
                     </button>
                     <button
                       onClick={() => setActiveTab("preview")}
@@ -309,7 +311,7 @@ export default function NewPostPage() {
                       )}
                     >
                       <Eye className="h-3.5 w-3.5" strokeWidth={1.5} />
-                      Превью
+                      {t.newPost.preview}
                     </button>
                   </div>
                 </div>
@@ -331,7 +333,7 @@ export default function NewPostPage() {
                       )}
                     </div>
                     <Textarea
-                      placeholder="// Вставьте ваш код здесь..."
+                      placeholder={t.newPost.codePlaceholder}
                       value={code}
                       onChange={(e) => setCode(e.target.value)}
                       className={cn(
@@ -352,7 +354,7 @@ export default function NewPostPage() {
                       {filename && <span className="text-[10px] text-white/30 font-mono">{filename}</span>}
                     </div>
                     <pre className="p-4 font-mono text-sm min-h-[300px] overflow-auto">
-                      <code className="text-white/70">{code || "// Превью появится здесь..."}</code>
+                      <code className="text-white/70">{code || t.newPost.previewPlaceholder}</code>
                     </pre>
                   </div>
                 )}
@@ -362,7 +364,7 @@ export default function NewPostPage() {
               <div className="space-y-3 p-5 rounded-2xl bg-white/[0.02] border border-white/[0.04]">
                 <Label className="text-xs text-white/50 flex items-center gap-2">
                   <Hash className="h-3 w-3" strokeWidth={1.5} />
-                  Теги (макс. 5)
+                  {t.newPost.tagsLabel} ({t.newPost.tagsMax})
                 </Label>
                 <div className="flex flex-wrap gap-2 mb-2">
                   {tags.map((tag) => (
@@ -378,7 +380,7 @@ export default function NewPostPage() {
                   ))}
                 </div>
                 <Input
-                  placeholder="Добавьте теги (Enter для добавления)"
+                  placeholder={t.newPost.addTagPlaceholder}
                   value={tagInput}
                   onChange={(e) => setTagInput(e.target.value)}
                   onKeyDown={handleTagKeyDown}
@@ -386,7 +388,7 @@ export default function NewPostPage() {
                   className="h-10 bg-white/[0.03] border-white/[0.06] text-white placeholder:text-white/25 focus:border-white/[0.12] focus-visible:ring-0 rounded-xl"
                 />
                 <div className="flex flex-wrap gap-1.5 mt-3">
-                  <span className="text-[10px] text-white/25 mr-1">Предложения:</span>
+                  <span className="text-[10px] text-white/25 mr-1">{t.newPost.suggestions}</span>
                   {suggestedTags
                     .filter((t) => !tags.includes(t))
                     .slice(0, 6)

@@ -13,9 +13,11 @@ import { useAuth } from "@/contexts/AuthContext"
 import { usersAPI } from "@/lib/api"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
+import { useLanguage } from "@/contexts/LanguageContext"
 
 export function SettingsProfile() {
     const { user, refreshUser } = useAuth()
+    const { t } = useLanguage()
     const fileInputRef = useRef<HTMLInputElement>(null)
     const [saving, setSaving] = useState(false)
     const [loading, setLoading] = useState(true)
@@ -50,11 +52,11 @@ export function SettingsProfile() {
         const file = e.target.files?.[0]
         if (file) {
             if (file.size > 5 * 1024 * 1024) {
-                toast.error("Файл слишком большой. Максимум 5MB.")
+                toast.error(t.settingsPage.fileTooLarge)
                 return
             }
             if (!file.type.startsWith("image/")) {
-                toast.error("Выберите изображение (JPG, PNG, GIF, WebP)")
+                toast.error(t.settingsPage.selectImage)
                 return
             }
 
@@ -65,10 +67,10 @@ export function SettingsProfile() {
             reader.readAsDataURL(file)
 
             try {
-                toast.loading("Загрузка аватара...")
+                toast.loading(t.settingsPage.uploadingAvatar)
                 await usersAPI.uploadAvatar(file)
                 toast.dismiss()
-                toast.success("Аватар обновлён!")
+                toast.success(t.settingsPage.avatarUpdated)
 
                 if (refreshUser) {
                     await refreshUser()
@@ -76,7 +78,7 @@ export function SettingsProfile() {
             } catch (err) {
                 console.error("Avatar upload error:", err)
                 toast.dismiss()
-                toast.error(err instanceof Error ? err.message : "Ошибка загрузки аватара")
+                toast.error(err instanceof Error ? err.message : t.settingsPage.avatarUploadError)
                 setAvatarPreview(null)
             }
         }
@@ -86,13 +88,13 @@ export function SettingsProfile() {
         const newErrors: Record<string, string> = {}
 
         if (!profile.display_name.trim()) {
-            newErrors.display_name = "Имя обязательно"
+            newErrors.display_name = t.settingsPage.nameRequired
         }
         if (profile.bio.length > 160) {
-            newErrors.bio = "Био должно быть не более 160 символов"
+            newErrors.bio = t.settingsPage.bioMaxLength
         }
         if (profile.website && !/^https?:\/\/.+/.test(profile.website)) {
-            newErrors.website = "URL должен начинаться с http:// или https://"
+            newErrors.website = t.settingsPage.urlFormat
         }
 
         setErrors(newErrors)
@@ -101,7 +103,7 @@ export function SettingsProfile() {
 
     const handleSave = async () => {
         if (!validateForm()) {
-            toast.error("Исправьте ошибки перед сохранением")
+            toast.error(t.settingsPage.fixErrorsBeforeSave)
             return
         }
 
@@ -121,10 +123,10 @@ export function SettingsProfile() {
                 await refreshUser()
             }
 
-            toast.success("Профиль сохранён!")
+            toast.success(t.settingsPage.profileSaved)
         } catch (err) {
             console.error("Error saving profile:", err)
-            toast.error("Ошибка сохранения профиля")
+            toast.error(t.settingsPage.profileSaveError)
         } finally {
             setSaving(false)
         }
@@ -165,14 +167,14 @@ export function SettingsProfile() {
                     </Button>
                 </div>
                 <div>
-                    <h3 className="font-medium text-white/80 mb-1">Фото профиля</h3>
-                    <p className="text-xs text-white/35">JPG, PNG или GIF. Максимум 5MB.</p>
+                    <h3 className="font-medium text-white/80 mb-1">{t.settingsPage.profilePhoto}</h3>
+                    <p className="text-xs text-white/35">{t.settingsPage.photoFormats}</p>
                     {avatarPreview && (
                         <button
                             className="mt-2 text-xs text-white/40 hover:text-white/70 transition-colors"
                             onClick={() => setAvatarPreview(null)}
                         >
-                            Отменить
+                            {t.settingsPage.cancelUpload}
                         </button>
                     )}
                 </div>
@@ -184,7 +186,7 @@ export function SettingsProfile() {
                     <div className="space-y-2">
                         <Label htmlFor="display_name" className="text-xs text-white/50 flex items-center gap-2">
                             <User className="h-3 w-3" strokeWidth={1.5} />
-                            Отображаемое имя
+                            {t.settingsPage.displayName}
                         </Label>
                         <Input
                             id="display_name"
@@ -200,7 +202,7 @@ export function SettingsProfile() {
                     <div className="space-y-2">
                         <Label htmlFor="username" className="text-xs text-white/50 flex items-center gap-2">
                             <AtSign className="h-3 w-3" strokeWidth={1.5} />
-                            Имя пользователя
+                            {t.settingsPage.username}
                         </Label>
                         <Input
                             id="username"
@@ -208,7 +210,7 @@ export function SettingsProfile() {
                             disabled
                             className="h-10 bg-white/[0.02] border-white/[0.04] text-white/40 rounded-xl opacity-60"
                         />
-                        <p className="text-[10px] text-white/25">Изменить нельзя</p>
+                        <p className="text-[10px] text-white/25">{t.settingsPage.cannotChange}</p>
                     </div>
                 </div>
 
@@ -224,11 +226,11 @@ export function SettingsProfile() {
                         disabled
                         className="h-10 bg-white/[0.02] border-white/[0.04] text-white/40 rounded-xl opacity-60"
                     />
-                    <p className="text-[10px] text-white/25">Изменить нельзя</p>
+                    <p className="text-[10px] text-white/25">{t.settingsPage.cannotChange}</p>
                 </div>
 
                 <div className="space-y-2">
-                    <Label htmlFor="bio" className="text-xs text-white/50">О себе</Label>
+                    <Label htmlFor="bio" className="text-xs text-white/50">{t.settingsPage.aboutMe}</Label>
                     <Textarea
                         id="bio"
                         value={profile.bio}
@@ -237,7 +239,7 @@ export function SettingsProfile() {
                             "bg-white/[0.03] border-white/[0.06] text-white placeholder:text-white/25 focus:border-white/[0.12] focus-visible:ring-0 rounded-xl min-h-[100px] resize-none",
                             errors.bio && "border-red-500/50"
                         )}
-                        placeholder="Расскажите о себе..."
+                        placeholder={t.settingsPage.tellAboutYourself}
                     />
                     <div className="flex justify-between">
                         <p className={cn(
@@ -253,14 +255,14 @@ export function SettingsProfile() {
                 <div className="space-y-2">
                     <Label htmlFor="location" className="text-xs text-white/50 flex items-center gap-2">
                         <MapPin className="h-3 w-3" strokeWidth={1.5} />
-                        Местоположение
+                        {t.settingsPage.location}
                     </Label>
                     <Input
                         id="location"
                         value={profile.location}
                         onChange={(e) => setProfile({ ...profile, location: e.target.value })}
                         className="h-10 bg-white/[0.03] border-white/[0.06] text-white placeholder:text-white/25 focus:border-white/[0.12] focus-visible:ring-0 rounded-xl"
-                        placeholder="Город, Страна"
+                        placeholder={t.settingsPage.cityCountry}
                     />
                 </div>
 
@@ -268,7 +270,7 @@ export function SettingsProfile() {
                     <div className="space-y-2">
                         <Label htmlFor="website" className="text-xs text-white/50 flex items-center gap-2">
                             <Globe className="h-3 w-3" strokeWidth={1.5} />
-                            Веб-сайт
+                            {t.settingsPage.website}
                         </Label>
                         <Input
                             id="website"
@@ -304,7 +306,7 @@ export function SettingsProfile() {
                 disabled={saving}
             >
                 {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" strokeWidth={2} />}
-                {saving ? "Сохранение..." : "Сохранить изменения"}
+                {saving ? t.settingsPage.saving : t.settingsPage.saveChanges}
             </Button>
         </div>
     )

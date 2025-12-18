@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Github, Eye, EyeOff, Loader2, ArrowLeft, Lock, Mail, Sparkles, Code, Terminal, Zap, FileCode, Check } from "lucide-react"
+import { Github, Eye, EyeOff, Loader2, ArrowLeft, Lock, Mail, Sparkles, Code, Terminal, Zap, FileCode, Check, Globe } from "lucide-react"
 import { useAuth } from "@/contexts/AuthContext"
 import { useLanguage } from "@/contexts/LanguageContext"
 import { GuestRoute } from "@/components/auth/ProtectedRoute"
@@ -30,7 +30,7 @@ function GoogleIcon({ className }: { className?: string }) {
 function LoginPageContent() {
   const router = useRouter()
   const { login } = useAuth()
-  const { t } = useLanguage()
+  const { t, language, setLanguage } = useLanguage()
   const [mounted, setMounted] = useState(false)
   const [activeCodeLine, setActiveCodeLine] = useState(0)
 
@@ -55,7 +55,7 @@ function LoginPageContent() {
     setError("")
 
     if (!email || !password) {
-      setError(t.auth.email + " и " + t.auth.password + " обязательны")
+      setError(t.auth.email + " " + t.auth.and + " " + t.auth.password + " " + t.validation.required)
       return
     }
 
@@ -65,7 +65,7 @@ function LoginPageContent() {
       toast.success(t.auth.welcomeBack)
       router.push("/feed")
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Ошибка входа"
+      const message = err instanceof Error ? err.message : t.validation.loginError
       try {
         const parsed = JSON.parse(message)
         if (parsed.non_field_errors) setError(parsed.non_field_errors[0])
@@ -90,9 +90,9 @@ function LoginPageContent() {
   ]
 
   const features = [
-    { icon: Zap, text: 'Мгновенная авторизация' },
-    { icon: Lock, text: 'Безопасное шифрование' },
-    { icon: Code, text: 'OAuth 2.0 интеграция' },
+    { icon: Zap, text: t.badges.instantAuth },
+    { icon: Lock, text: t.badges.secureEncryption },
+    { icon: Code, text: t.badges.oauthIntegration },
   ]
 
   return (
@@ -116,11 +116,20 @@ function LoginPageContent() {
           <Image src="/gitforum-logo.png" alt="GitForum" width={32} height={32} className="h-8 w-8" />
           <span className="text-base font-medium text-white/70">GitForum</span>
         </Link>
-        <Link href="/register">
-          <Button variant="ghost" size="sm" className="text-white/50 hover:text-white/80 hover:bg-white/[0.04]">
-            {t.auth.createAccount}
-          </Button>
-        </Link>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setLanguage(language === 'ru' ? 'kk' : 'ru')}
+            className="flex items-center gap-1.5 px-3 py-2 text-sm text-white/50 hover:text-white/90 transition-colors rounded-lg hover:bg-white/[0.04]"
+          >
+            <Globe className="h-4 w-4" strokeWidth={1.5} />
+            <span className="uppercase text-xs font-medium">{language}</span>
+          </button>
+          <Link href="/register">
+            <Button variant="ghost" size="sm" className="text-white/50 hover:text-white/80 hover:bg-white/[0.04]">
+              {t.auth.createAccount}
+            </Button>
+          </Link>
+        </div>
       </header>
 
       {/* Main content - Two columns */}
@@ -136,7 +145,7 @@ function LoginPageContent() {
             <div className="mb-8">
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.03] border border-white/[0.06] mb-4">
                 <Sparkles className="h-3 w-3 text-white/40" strokeWidth={1.5} />
-                <span className="text-xs text-white/40">Безопасный вход</span>
+                <span className="text-xs text-white/40">{t.badges.secureLogin}</span>
               </div>
               <h1 className="text-3xl font-bold text-white/90 mb-2">{t.auth.welcomeBack}</h1>
               <p className="text-sm text-white/40">{t.auth.loginSubtitle}</p>
@@ -172,7 +181,7 @@ function LoginPageContent() {
                   <div className="w-full border-t border-white/[0.06]" />
                 </div>
                 <div className="relative flex justify-center">
-                  <span className="bg-[#0c0c0e] px-3 text-[10px] text-white/25 uppercase tracking-wider">или</span>
+                  <span className="bg-[#0c0c0e] px-3 text-[10px] text-white/25 uppercase tracking-wider">{t.auth.orContinueWith}</span>
                 </div>
               </div>
 
@@ -323,7 +332,7 @@ function LoginPageContent() {
                   <div className="flex items-center gap-3">
                     <span className="flex items-center gap-1">
                       <span className="h-1.5 w-1.5 rounded-full bg-green-500/60 animate-pulse" />
-                      Ready
+                      {t.badges.ready}
                     </span>
                   </div>
                   <span>TypeScript</span>

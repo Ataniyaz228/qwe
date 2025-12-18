@@ -29,6 +29,7 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { useAuth } from "@/contexts/AuthContext"
+import { useLanguage } from "@/contexts/LanguageContext"
 import { usersAPI, postsAPI } from "@/lib/api"
 import type { Post } from "@/lib/api"
 import { toast } from "sonner"
@@ -50,9 +51,10 @@ const languageColors: Record<string, string> = {
 interface PostCardProps {
   post: Post
   index: number
+  noDescription: string
 }
 
-function PostCard({ post, index }: PostCardProps) {
+function PostCard({ post, index, noDescription }: PostCardProps) {
   const langColor = languageColors[post.language?.toLowerCase() || ""] || "bg-white/30"
 
   return (
@@ -78,7 +80,7 @@ function PostCard({ post, index }: PostCardProps) {
               {post.filename || post.title}
             </h3>
             <p className="text-xs text-white/35 mt-1.5 line-clamp-2 leading-relaxed">
-              {post.description || "Нет описания"}
+              {post.description || noDescription}
             </p>
           </div>
           <div className="opacity-0 group-hover:opacity-100 transition-all duration-300 group-hover:translate-x-1">
@@ -110,6 +112,7 @@ function PostCard({ post, index }: PostCardProps) {
 export default function ProfilePage() {
   const router = useRouter()
   const { user, isAuthenticated, isLoading: authLoading } = useAuth()
+  const { t } = useLanguage()
 
   const [activeTab, setActiveTab] = useState("posts")
   const [posts, setPosts] = useState<Post[]>([])
@@ -198,11 +201,11 @@ export default function ProfilePage() {
   }
 
   const statItems = [
-    { label: "Постов", value: stats.posts, icon: FileCode },
-    { label: "Подписчиков", value: stats.followers, icon: Users },
-    { label: "Подписки", value: stats.following, icon: UserPlus },
-    { label: "Лайков", value: stats.totalLikes, icon: Heart },
-    { label: "Просмотров", value: stats.totalViews, icon: TrendingUp },
+    { label: t.pages.profile.posts, value: stats.posts, icon: FileCode },
+    { label: t.pages.profile.followers, value: stats.followers, icon: Users },
+    { label: t.pages.profile.following, value: stats.following, icon: UserPlus },
+    { label: t.pages.profile.likes, value: stats.totalLikes, icon: Heart },
+    { label: t.pages.profile.views, value: stats.totalViews, icon: TrendingUp },
   ]
 
   return (
@@ -298,7 +301,7 @@ export default function ProfilePage() {
                           className="gap-1.5 bg-white/[0.03] border-white/[0.08] text-white/50 hover:bg-white/[0.06] hover:text-white/70 hover:border-white/[0.12] rounded-xl transition-all duration-300"
                         >
                           <Share2 className="h-4 w-4" strokeWidth={1.5} />
-                          <span className="hidden sm:inline">Поделиться</span>
+                          <span className="hidden sm:inline">{t.pages.profile.share}</span>
                         </Button>
                         <Link href="/settings">
                           <Button
@@ -306,7 +309,7 @@ export default function ProfilePage() {
                             className="gap-1.5 bg-white text-black hover:bg-white/90 rounded-xl font-medium transition-all duration-300 hover:scale-105"
                           >
                             <Settings className="h-4 w-4" strokeWidth={2} />
-                            <span className="hidden sm:inline">Настройки</span>
+                            <span className="hidden sm:inline">{t.pages.profile.settings}</span>
                           </Button>
                         </Link>
                       </div>
@@ -349,7 +352,7 @@ export default function ProfilePage() {
                       {user.date_joined && (
                         <span className="flex items-center gap-1.5 text-white/30">
                           <Calendar className="h-3.5 w-3.5" strokeWidth={1.5} />
-                          С {formatDate(user.date_joined)}
+                          {t.pages.profile.joined} {formatDate(user.date_joined)}
                         </span>
                       )}
                     </div>
@@ -398,7 +401,7 @@ export default function ProfilePage() {
                   )}
                 >
                   <Code2 className="h-4 w-4" strokeWidth={activeTab === "posts" ? 2 : 1.5} />
-                  Посты ({posts.length})
+                  {t.pages.profile.postsTab} ({posts.length})
                 </button>
                 <button
                   onClick={() => setActiveTab("bookmarks")}
@@ -410,7 +413,7 @@ export default function ProfilePage() {
                   )}
                 >
                   <Bookmark className="h-4 w-4" strokeWidth={activeTab === "bookmarks" ? 2 : 1.5} />
-                  Закладки ({bookmarks.length})
+                  {t.pages.profile.bookmarksTab} ({bookmarks.length})
                 </button>
               </div>
 
@@ -419,7 +422,7 @@ export default function ProfilePage() {
                 <div className="flex items-center justify-center py-20">
                   <div className="flex flex-col items-center gap-3">
                     <Loader2 className="h-6 w-6 animate-spin text-white/30" />
-                    <p className="text-xs text-white/20">Загрузка...</p>
+                    <p className="text-xs text-white/20">{t.pages.profile.loading}</p>
                   </div>
                 </div>
               )}
@@ -428,18 +431,18 @@ export default function ProfilePage() {
               {!loading && activeTab === "posts" && (
                 <div className="space-y-3">
                   {posts.length > 0 ? (
-                    posts.map((post, i) => <PostCard key={post.id} post={post} index={i} />)
+                    posts.map((post, i) => <PostCard key={post.id} post={post} index={i} noDescription={t.pages.profile.noDescription} />)
                   ) : (
                     <div className="rounded-2xl border border-white/[0.04] bg-gradient-to-b from-white/[0.02] to-transparent p-16 text-center">
                       <div className="h-16 w-16 mx-auto mb-5 rounded-2xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-center">
                         <Code2 className="h-7 w-7 text-white/20" strokeWidth={1} />
                       </div>
-                      <h3 className="font-medium text-white/60 mb-2">Пока нет постов</h3>
-                      <p className="text-sm text-white/30 mb-6 max-w-xs mx-auto">Создайте свой первый сниппет и поделитесь кодом с сообществом</p>
+                      <h3 className="font-medium text-white/60 mb-2">{t.pages.profile.noPosts}</h3>
+                      <p className="text-sm text-white/30 mb-6 max-w-xs mx-auto">{t.pages.profile.createFirstSnippet}</p>
                       <Link href="/new">
                         <Button className="gap-2 bg-white text-black hover:bg-white/90 rounded-xl font-medium transition-all duration-300 hover:scale-105 shadow-lg shadow-white/10">
                           <Sparkles className="h-4 w-4" strokeWidth={2} />
-                          Создать пост
+                          {t.pages.profile.createPost}
                         </Button>
                       </Link>
                     </div>
@@ -451,17 +454,17 @@ export default function ProfilePage() {
               {!loading && activeTab === "bookmarks" && (
                 <div className="space-y-3">
                   {bookmarks.length > 0 ? (
-                    bookmarks.map((post, i) => <PostCard key={post.id} post={post} index={i} />)
+                    bookmarks.map((post, i) => <PostCard key={post.id} post={post} index={i} noDescription={t.pages.profile.noDescription} />)
                   ) : (
                     <div className="rounded-2xl border border-white/[0.04] bg-gradient-to-b from-white/[0.02] to-transparent p-16 text-center">
                       <div className="h-16 w-16 mx-auto mb-5 rounded-2xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-center">
                         <Bookmark className="h-7 w-7 text-white/20" strokeWidth={1} />
                       </div>
-                      <h3 className="font-medium text-white/60 mb-2">Нет закладок</h3>
-                      <p className="text-sm text-white/30 mb-6 max-w-xs mx-auto">Сохраняйте полезные сниппеты для быстрого доступа</p>
+                      <h3 className="font-medium text-white/60 mb-2">{t.pages.profile.noBookmarks}</h3>
+                      <p className="text-sm text-white/30 mb-6 max-w-xs mx-auto">{t.pages.profile.saveSnippets}</p>
                       <Link href="/explore">
                         <Button variant="outline" className="gap-2 bg-white/[0.03] border-white/[0.08] text-white/60 hover:bg-white/[0.06] rounded-xl transition-all duration-300">
-                          Найти сниппеты
+                          {t.pages.profile.findSnippets}
                         </Button>
                       </Link>
                     </div>

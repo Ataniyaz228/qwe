@@ -18,6 +18,7 @@ import {
 } from "lucide-react"
 import { toast } from "sonner"
 import { postsAPI } from "@/lib/api"
+import { useLanguage } from "@/contexts/LanguageContext"
 import { cn } from "@/lib/utils"
 
 const languageColors: Record<string, { bg: string; dot: string }> = {
@@ -65,6 +66,7 @@ export default function PostPage() {
   const [copied, setCopied] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const { t } = useLanguage()
 
   useEffect(() => {
     setMounted(true)
@@ -77,19 +79,19 @@ export default function PostPage() {
     if (post?.code) {
       navigator.clipboard.writeText(post.code)
       setCopied(true)
-      toast.success("Код скопирован!")
+      toast.success(t.pages.post.codeCopied)
       setTimeout(() => setCopied(false), 2000)
     }
   }
 
   const handleShare = () => {
     navigator.clipboard.writeText(window.location.href)
-    toast.success("Ссылка скопирована!")
+    toast.success(t.pages.post.linkCopied)
   }
 
   const handleLike = async () => {
     if (!isAuthenticated) {
-      toast.error("Войдите, чтобы лайкнуть")
+      toast.error(t.pages.post.loginToLike)
       return
     }
     try {
@@ -102,16 +104,16 @@ export default function PostPage() {
 
   const handleBookmark = async () => {
     if (!isAuthenticated) {
-      toast.error("Войдите, чтобы сохранить")
+      toast.error(t.pages.post.loginToBookmark)
       return
     }
     try {
       if (post?.is_bookmarked) {
         await unbookmark()
-        toast.success("Убрано из закладок")
+        toast.success(t.pages.post.removedFromBookmarks)
       } else {
         await bookmark()
-        toast.success("Добавлено в закладки")
+        toast.success(t.pages.post.addedToBookmarks)
       }
     } catch {
       toast.error("Ошибка")
@@ -122,10 +124,10 @@ export default function PostPage() {
     setIsDeleting(true)
     try {
       await postsAPI.delete(postId)
-      toast.success("Пост удалён")
+      toast.success(t.pages.post.postDeleted)
       router.push("/feed")
     } catch (err) {
-      toast.error("Ошибка удаления")
+      toast.error(t.pages.post.deleteError)
     } finally {
       setIsDeleting(false)
     }
@@ -143,7 +145,7 @@ export default function PostPage() {
               <div className="h-12 w-12 rounded-2xl bg-white/[0.04] border border-white/[0.06] flex items-center justify-center">
                 <Loader2 className="h-5 w-5 animate-spin text-white/40" />
               </div>
-              <p className="text-sm text-white/30">Загрузка поста...</p>
+              <p className="text-sm text-white/30">{t.pages.post.loadingPost}</p>
             </div>
           </main>
         </div>
@@ -163,12 +165,12 @@ export default function PostPage() {
               <div className="h-16 w-16 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center">
                 <AlertCircle className="h-7 w-7 text-red-400" strokeWidth={1.5} />
               </div>
-              <h2 className="text-lg font-medium text-white/70">Пост не найден</h2>
-              <p className="text-sm text-white/35">Возможно, он был удалён</p>
+              <h2 className="text-lg font-medium text-white/70">{t.pages.post.postNotFound}</h2>
+              <p className="text-sm text-white/35">{t.pages.post.maybeDeleted}</p>
               <Link href="/feed">
                 <Button variant="outline" className="gap-2 bg-white/[0.02] border-white/[0.06] text-white/60 hover:bg-white/[0.05] rounded-xl">
                   <ArrowLeft className="h-4 w-4" strokeWidth={1.5} />
-                  Вернуться
+                  {t.pages.post.back}
                 </Button>
               </Link>
             </div>
@@ -200,7 +202,7 @@ export default function PostPage() {
               )}
             >
               <ArrowLeft className="h-4 w-4" strokeWidth={1.5} />
-              Назад в ленту
+              {t.pages.post.backToFeed}
             </Link>
 
             <article className={cn(
@@ -236,7 +238,7 @@ export default function PostPage() {
                     <Link href={`/post/${post.id}/edit`}>
                       <Button variant="ghost" size="sm" className="gap-1.5 text-white/40 hover:text-white/70 hover:bg-white/[0.04] rounded-lg">
                         <Pencil className="h-4 w-4" strokeWidth={1.5} />
-                        Изменить
+                        {t.pages.post.edit}
                       </Button>
                     </Link>
                     <Button
@@ -246,7 +248,7 @@ export default function PostPage() {
                       disabled={isDeleting}
                     >
                       <Trash2 className="h-4 w-4" strokeWidth={1.5} />
-                      {isDeleting ? "..." : "Удалить"}
+                      {isDeleting ? "..." : t.pages.post.delete}
                     </Button>
                   </div>
                 )}
@@ -287,7 +289,7 @@ export default function PostPage() {
                       className="gap-1.5 text-white/40 hover:text-white/70 hover:bg-white/[0.04] rounded-lg"
                     >
                       {copied ? <Check className="h-4 w-4 text-green-400" strokeWidth={2} /> : <Copy className="h-4 w-4" strokeWidth={1.5} />}
-                      {copied ? "Скопировано" : "Копировать"}
+                      {copied ? t.pages.post.copied : t.pages.post.copy}
                     </Button>
                   </div>
                 </div>

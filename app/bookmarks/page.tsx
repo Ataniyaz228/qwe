@@ -34,11 +34,16 @@ interface BookmarkCardProps {
   viewMode: "grid" | "list"
   onRemove: () => void
   index: number
+  translations: {
+    removed: string
+    error: string
+    noDescription: string
+  }
 }
 
-function BookmarkCard({ post, viewMode, onRemove, index }: BookmarkCardProps) {
+function BookmarkCard({ post, viewMode, onRemove, index, translations }: BookmarkCardProps) {
   const color = languageColors[post.language?.toLowerCase() || ""] || { bg: "from-white/5 to-white/[0.02]", dot: "bg-white/40" }
-  const tags = post.tags?.map((t: Tag) => t.name) || []
+  const tags = post.tags?.map((tag: Tag) => tag.name) || []
 
   const handleRemove = async (e: React.MouseEvent) => {
     e.preventDefault()
@@ -46,9 +51,9 @@ function BookmarkCard({ post, viewMode, onRemove, index }: BookmarkCardProps) {
     try {
       await postsAPI.unbookmark(post.id)
       onRemove()
-      toast.success("Убрано из закладок")
+      toast.success(translations.removed)
     } catch {
-      toast.error("Ошибка")
+      toast.error(translations.error)
     }
   }
 
@@ -134,7 +139,7 @@ function BookmarkCard({ post, viewMode, onRemove, index }: BookmarkCardProps) {
         </div>
 
         {/* Description */}
-        <p className="text-xs text-white/35 mb-3 line-clamp-2">{post.description || "Нет описания"}</p>
+        <p className="text-xs text-white/35 mb-3 line-clamp-2">{post.description || translations.noDescription}</p>
 
         {/* Tags */}
         {tags.length > 0 && (
@@ -210,7 +215,7 @@ export default function BookmarksPage() {
         setBookmarks(data.results || [])
       } catch (err) {
         console.error("Error fetching bookmarks:", err)
-        setError("Ошибка загрузки закладок")
+        setError(t.bookmarks.loadError)
       } finally {
         setIsLoading(false)
       }
@@ -303,7 +308,7 @@ export default function BookmarksPage() {
                 <div className="h-12 w-12 rounded-2xl bg-white/[0.04] border border-white/[0.06] flex items-center justify-center mb-4">
                   <Loader2 className="h-5 w-5 animate-spin text-white/40" />
                 </div>
-                <p className="text-sm text-white/30">Загрузка закладок...</p>
+                <p className="text-sm text-white/30">{t.bookmarks.loading}</p>
               </div>
             )}
 
@@ -325,16 +330,16 @@ export default function BookmarksPage() {
                 <div className="h-16 w-16 rounded-2xl bg-white/[0.04] border border-white/[0.06] flex items-center justify-center mb-5">
                   <FolderHeart className="h-7 w-7 text-white/30" strokeWidth={1.5} />
                 </div>
-                <h2 className="text-lg font-medium text-white/70 mb-2">Нет закладок</h2>
+                <h2 className="text-lg font-medium text-white/70 mb-2">{t.bookmarks.empty}</h2>
                 <p className="text-sm text-white/35 mb-6 max-w-xs">
-                  Сохраняйте интересные сниппеты, чтобы вернуться к ним позже
+                  {t.bookmarks.emptySubtitle}
                 </p>
                 <Button
                   onClick={() => router.push("/explore")}
                   className="gap-2 bg-white text-black hover:bg-white/90 rounded-xl font-medium"
                 >
                   <Compass className="h-4 w-4" strokeWidth={2} />
-                  Найти сниппеты
+                  {t.bookmarks.explore}
                 </Button>
               </div>
             )}
@@ -354,7 +359,7 @@ export default function BookmarksPage() {
                       </div>
                       <div>
                         <p className="text-2xl font-bold text-white/80 group-hover:text-white transition-colors">{stats.total}</p>
-                        <p className="text-xs text-white/35">Закладок</p>
+                        <p className="text-xs text-white/35">{t.bookmarks.bookmarksCount}</p>
                       </div>
                     </div>
                   </div>
@@ -365,7 +370,7 @@ export default function BookmarksPage() {
                       </div>
                       <div>
                         <p className="text-2xl font-bold text-white/80 group-hover:text-white transition-colors">{stats.totalLikes}</p>
-                        <p className="text-xs text-white/35">Лайков</p>
+                        <p className="text-xs text-white/35">{t.bookmarks.likesCount}</p>
                       </div>
                     </div>
                   </div>
@@ -376,7 +381,7 @@ export default function BookmarksPage() {
                       </div>
                       <div>
                         <p className="text-lg font-bold text-white/80 group-hover:text-white transition-colors">{stats.topLang}</p>
-                        <p className="text-xs text-white/35">Топ язык</p>
+                        <p className="text-xs text-white/35">{t.bookmarks.topLanguage}</p>
                       </div>
                     </div>
                   </div>
@@ -396,7 +401,7 @@ export default function BookmarksPage() {
                       isFocused ? "text-white/50" : "text-white/25"
                     )} strokeWidth={1.5} />
                     <Input
-                      placeholder="Поиск закладок..."
+                      placeholder={t.bookmarks.searchPlaceholder}
                       className="h-10 pl-10 bg-white/[0.03] border-white/[0.06] text-white placeholder:text-white/25 focus:border-white/[0.1] focus-visible:ring-0 rounded-xl"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
@@ -410,7 +415,7 @@ export default function BookmarksPage() {
                       <SelectValue placeholder="Язык" />
                     </SelectTrigger>
                     <SelectContent className="bg-[#0c0c0e] border-white/[0.06]">
-                      <SelectItem value="all">Все языки</SelectItem>
+                      <SelectItem value="all">{t.bookmarks.allLanguages}</SelectItem>
                       {languages.map((lang) => (
                         <SelectItem key={lang} value={lang!.toLowerCase()}>{lang}</SelectItem>
                       ))}
@@ -423,9 +428,9 @@ export default function BookmarksPage() {
                       <SelectValue placeholder="Сортировка" />
                     </SelectTrigger>
                     <SelectContent className="bg-[#0c0c0e] border-white/[0.06]">
-                      <SelectItem value="recent">По дате</SelectItem>
-                      <SelectItem value="likes">По лайкам</SelectItem>
-                      <SelectItem value="title">По названию</SelectItem>
+                      <SelectItem value="recent">{t.bookmarks.byDate}</SelectItem>
+                      <SelectItem value="likes">{t.bookmarks.byLikes}</SelectItem>
+                      <SelectItem value="title">{t.bookmarks.byTitle}</SelectItem>
                     </SelectContent>
                   </Select>
 
@@ -464,7 +469,7 @@ export default function BookmarksPage() {
                   <div className="flex items-center gap-2 mb-4">
                     <Search className="h-4 w-4 text-white/30" strokeWidth={1.5} />
                     <p className="text-sm text-white/40">
-                      Найдено: <span className="text-white/60 font-medium">{filteredBookmarks.length}</span>
+                      {t.bookmarks.found}: <span className="text-white/60 font-medium">{filteredBookmarks.length}</span>
                     </p>
                   </div>
                 )}
@@ -475,7 +480,7 @@ export default function BookmarksPage() {
                     <div className="h-12 w-12 rounded-2xl bg-white/[0.04] border border-white/[0.06] flex items-center justify-center mb-4">
                       <Search className="h-5 w-5 text-white/30" strokeWidth={1.5} />
                     </div>
-                    <p className="text-white/40">Ничего не найдено</p>
+                    <p className="text-white/40">{t.bookmarks.nothingFound}</p>
                   </div>
                 ) : (
                   <div className={cn(
@@ -492,6 +497,11 @@ export default function BookmarksPage() {
                         viewMode={viewMode}
                         onRemove={() => handleRemoveBookmark(bookmark.id)}
                         index={index}
+                        translations={{
+                          removed: t.bookmarks.removed,
+                          error: t.bookmarks.error,
+                          noDescription: t.bookmarks.noDescription
+                        }}
                       />
                     ))}
                   </div>

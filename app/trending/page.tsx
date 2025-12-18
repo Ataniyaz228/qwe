@@ -209,7 +209,7 @@ export default function TrendingPage() {
         setPosts(Array.isArray(data) ? data : (data as unknown as { results: Post[] }).results || [])
       } catch (err) {
         console.error("Error fetching trending:", err)
-        setError("Ошибка загрузки")
+        setError(t.pages.trending.loadError)
       } finally {
         setIsLoading(false)
       }
@@ -308,10 +308,10 @@ export default function TrendingPage() {
             mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
           )}>
             {[
-              { icon: Trophy, value: stats.total, label: "Постов", gradient: "from-yellow-500/20 to-amber-600/10", iconColor: "text-yellow-400" },
+              { icon: Trophy, value: stats.total, label: t.pages.trending.posts, gradient: "from-yellow-500/20 to-amber-600/10", iconColor: "text-yellow-400" },
               { icon: Flame, value: stats.hotCount, label: "HOT", gradient: "from-orange-500/20 to-red-600/10", iconColor: "text-orange-400" },
-              { icon: Heart, value: stats.totalLikes, label: "Лайков", gradient: "from-rose-500/20 to-pink-600/10", iconColor: "text-rose-400" },
-              { icon: Eye, value: stats.totalViews, label: "Просмотров", gradient: "from-blue-500/20 to-cyan-600/10", iconColor: "text-blue-400" },
+              { icon: Heart, value: stats.totalLikes, label: t.pages.trending.likes, gradient: "from-rose-500/20 to-pink-600/10", iconColor: "text-rose-400" },
+              { icon: Eye, value: stats.totalViews, label: t.pages.trending.views, gradient: "from-blue-500/20 to-cyan-600/10", iconColor: "text-blue-400" },
             ].map((stat, i) => (
               <div
                 key={stat.label}
@@ -337,15 +337,10 @@ export default function TrendingPage() {
           )}>
             <div className="flex items-center gap-2 mb-2">
               <Zap className="h-4 w-4 text-green-400" strokeWidth={1.5} />
-              <h3 className="text-sm font-medium text-white/70">Как это работает</h3>
+              <h3 className="text-sm font-medium text-white/70">{t.pages.trending.howItWorks}</h3>
             </div>
             <p className="text-xs text-white/35 leading-relaxed">
-              Посты ранжируются по <span className="text-white/60 font-medium">популярности</span> —
-              количество лайков, комментариев и просмотров. Посты с пометкой{" "}
-              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-orange-500/20 text-[9px] text-orange-400 font-bold">
-                <Flame className="h-2.5 w-2.5" />HOT
-              </span>{" "}
-              имеют высокую активность.
+              {t.pages.trending.howItWorksDesc}
             </p>
           </div>
 
@@ -364,7 +359,7 @@ export default function TrendingPage() {
                 isFocused ? "text-white/50" : "text-white/25"
               )} strokeWidth={1.5} />
               <Input
-                placeholder="Поиск в трендах..."
+                placeholder={t.pages.trending.searchPlaceholder}
                 className="h-10 pl-10 bg-white/[0.03] border-white/[0.06] text-white placeholder:text-white/25 focus:border-white/[0.1] focus-visible:ring-0 rounded-xl"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -440,7 +435,7 @@ export default function TrendingPage() {
               <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-orange-500/20 to-red-600/10 border border-orange-500/30 flex items-center justify-center mb-4">
                 <Loader2 className="h-5 w-5 animate-spin text-orange-400" />
               </div>
-              <p className="text-sm text-white/30">Загрузка трендов...</p>
+              <p className="text-sm text-white/30">{t.pages.trending.loadingTrends}</p>
             </div>
           )}
 
@@ -461,7 +456,7 @@ export default function TrendingPage() {
                 <div className="flex items-center gap-2 mb-4">
                   <Search className="h-4 w-4 text-white/30" strokeWidth={1.5} />
                   <p className="text-sm text-white/40">
-                    Найдено: <span className="text-white/60 font-medium">{filteredAndSortedPosts.length}</span>
+                    {t.pages.trending.found}: <span className="text-white/60 font-medium">{filteredAndSortedPosts.length}</span>
                   </p>
                 </div>
               )}
@@ -481,9 +476,9 @@ export default function TrendingPage() {
                   <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-orange-500/20 to-red-600/10 border border-orange-500/20 flex items-center justify-center mb-5">
                     <Flame className="h-7 w-7 text-orange-400/50" strokeWidth={1.5} />
                   </div>
-                  <h3 className="text-lg font-medium text-white/60 mb-2">Нет trending постов</h3>
+                  <h3 className="text-lg font-medium text-white/60 mb-2">{t.pages.trending.noTrendingPosts}</h3>
                   <p className="text-sm text-white/30 max-w-xs">
-                    {posts.length === 0 ? "Создайте первый пост!" : "Попробуйте изменить фильтры"}
+                    {posts.length === 0 ? t.pages.trending.createFirstPost : t.pages.trending.changeFilters}
                   </p>
                 </div>
               )}

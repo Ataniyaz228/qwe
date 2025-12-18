@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Github, Eye, EyeOff, Check, Loader2, User, Mail, Lock, ArrowLeft, Rocket, Code, Users, Sparkles, FileCode } from "lucide-react"
+import { Github, Eye, EyeOff, Check, Loader2, User, Mail, Lock, ArrowLeft, Rocket, Code, Users, Sparkles, FileCode, Globe } from "lucide-react"
 import { useAuth } from "@/contexts/AuthContext"
 import { useLanguage } from "@/contexts/LanguageContext"
 import { GuestRoute } from "@/components/auth/ProtectedRoute"
@@ -31,7 +31,7 @@ function GoogleIcon({ className }: { className?: string }) {
 function RegisterPageContent() {
     const router = useRouter()
     const { register } = useAuth()
-    const { t } = useLanguage()
+    const { t, language, setLanguage } = useLanguage()
     const [mounted, setMounted] = useState(false)
     const [activeStep, setActiveStep] = useState(0)
 
@@ -66,11 +66,11 @@ function RegisterPageContent() {
         setErrors({})
 
         const newErrors: Record<string, string> = {}
-        if (!username || username.length < 3) newErrors.username = "Минимум 3 символа"
-        if (!/^[a-zA-Z0-9_]+$/.test(username)) newErrors.username = "Только буквы, цифры и _"
-        if (!email || !email.includes("@")) newErrors.email = "Некорректный email"
-        if (!isPasswordValid) newErrors.password = "Пароль не соответствует требованиям"
-        if (!agreedToTerms) newErrors.terms = "Необходимо принять условия"
+        if (!username || username.length < 3) newErrors.username = t.validation.minChars
+        if (!/^[a-zA-Z0-9_]+$/.test(username)) newErrors.username = t.validation.onlyLatinAndUnderscore
+        if (!email || !email.includes("@")) newErrors.email = t.validation.invalidEmail
+        if (!isPasswordValid) newErrors.password = t.validation.passwordNotMeet
+        if (!agreedToTerms) newErrors.terms = t.validation.acceptTerms
 
         if (Object.keys(newErrors).length > 0) {
             setErrors(newErrors)
@@ -80,7 +80,7 @@ function RegisterPageContent() {
         setIsSubmitting(true)
         try {
             await register(username, email, password)
-            toast.success("Аккаунт создан!")
+            toast.success(t.validation.accountCreated)
             router.push("/feed")
         } catch (err) {
             const message = err instanceof Error ? err.message : t.common.error
@@ -101,9 +101,9 @@ function RegisterPageContent() {
     }
 
     const steps = [
-        { icon: User, title: 'Создайте профиль', desc: 'Выберите уникальный username' },
-        { icon: Code, title: 'Делитесь кодом', desc: 'Публикуйте сниппеты' },
-        { icon: Users, title: 'Общайтесь', desc: 'Находите единомышленников' },
+        { icon: User, title: t.badges.createProfile, desc: t.badges.chooseUsername },
+        { icon: Code, title: t.badges.shareCode, desc: t.badges.publishSnippets },
+        { icon: Users, title: t.badges.communicate, desc: t.badges.findLikeminded },
     ]
 
     const codeLines = [
@@ -137,11 +137,20 @@ function RegisterPageContent() {
                     <Image src="/gitforum-logo.png" alt="GitForum" width={32} height={32} className="h-8 w-8" />
                     <span className="text-base font-medium text-white/70">GitForum</span>
                 </Link>
-                <Link href="/login">
-                    <Button variant="ghost" size="sm" className="text-white/50 hover:text-white/80 hover:bg-white/[0.04]">
-                        Уже есть аккаунт?
-                    </Button>
-                </Link>
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={() => setLanguage(language === 'ru' ? 'kk' : 'ru')}
+                        className="flex items-center gap-1.5 px-3 py-2 text-sm text-white/50 hover:text-white/90 transition-colors rounded-lg hover:bg-white/[0.04]"
+                    >
+                        <Globe className="h-4 w-4" strokeWidth={1.5} />
+                        <span className="uppercase text-xs font-medium">{language}</span>
+                    </button>
+                    <Link href="/login">
+                        <Button variant="ghost" size="sm" className="text-white/50 hover:text-white/80 hover:bg-white/[0.04]">
+                            {t.badges.haveAccount}
+                        </Button>
+                    </Link>
+                </div>
             </header>
 
             {/* Main content */}
@@ -157,7 +166,7 @@ function RegisterPageContent() {
                         <div className="mb-6">
                             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.03] border border-white/[0.06] mb-4">
                                 <Rocket className="h-3 w-3 text-white/40" strokeWidth={1.5} />
-                                <span className="text-xs text-white/40">Бесплатная регистрация</span>
+                                <span className="text-xs text-white/40">{t.badges.freeRegistration}</span>
                             </div>
                             <h1 className="text-3xl font-bold text-white/90 mb-2">{t.auth.createAccount}</h1>
                             <p className="text-sm text-white/40">{t.auth.registerSubtitle}</p>
@@ -193,7 +202,7 @@ function RegisterPageContent() {
                                     <div className="w-full border-t border-white/[0.06]" />
                                 </div>
                                 <div className="relative flex justify-center">
-                                    <span className="bg-[#0c0c0e] px-3 text-[10px] text-white/25 uppercase tracking-wider">или</span>
+                                    <span className="bg-[#0c0c0e] px-3 text-[10px] text-white/25 uppercase tracking-wider">{t.auth.orContinueWith}</span>
                                 </div>
                             </div>
 
@@ -391,7 +400,7 @@ function RegisterPageContent() {
                                 <div className="flex items-center justify-between px-4 py-2 bg-white/[0.02] border-t border-white/[0.04] text-[10px] text-white/25">
                                     <span className="flex items-center gap-1">
                                         <span className="h-1.5 w-1.5 rounded-full bg-green-500/60 animate-pulse" />
-                                        Ready
+                                        {t.badges.ready}
                                     </span>
                                     <span>TypeScript</span>
                                 </div>

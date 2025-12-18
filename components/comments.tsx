@@ -10,6 +10,7 @@ import { Loader2, MessageSquare, Send, Reply, ChevronDown, ChevronUp, Trash2 } f
 import { toast } from "sonner"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
+import { useLanguage } from "@/contexts/LanguageContext"
 
 interface CommentsProps {
     postId: string
@@ -48,6 +49,7 @@ function CommentItem({
     const maxDepth = 5
     const isNested = depth > 0
     const { user, isAuthenticated } = useAuth()
+    const { t } = useLanguage()
     const [showReplyForm, setShowReplyForm] = useState(false)
     const [replyContent, setReplyContent] = useState("")
     const [submitting, setSubmitting] = useState(false)
@@ -61,9 +63,9 @@ function CommentItem({
         try {
             await postsAPI.deleteComment(comment.id)
             onCommentDeleted(comment.id)
-            toast.success('Комментарий удалён')
+            toast.success(t.validation.commentDeleted)
         } catch (err) {
-            toast.error('Ошибка удаления')
+            toast.error(t.validation.deleteError)
         } finally {
             setDeleting(false)
         }
@@ -78,9 +80,9 @@ function CommentItem({
             onReplyAdded(reply, comment.id)
             setReplyContent("")
             setShowReplyForm(false)
-            toast.success("Ответ добавлен!")
+            toast.success(t.validation.replyAdded)
         } catch (err) {
-            toast.error("Ошибка отправки ответа")
+            toast.error(t.validation.replyError)
         } finally {
             setSubmitting(false)
         }
@@ -130,7 +132,7 @@ function CommentItem({
                                 onClick={() => setShowReplyForm(!showReplyForm)}
                             >
                                 <Reply className="h-3 w-3" strokeWidth={1.5} />
-                                Ответить
+                                {t.comments.reply}
                             </button>
                         )}
                         {hasReplies && (
@@ -153,7 +155,7 @@ function CommentItem({
                                 ) : (
                                     <>
                                         <Trash2 className="h-3 w-3" strokeWidth={1.5} />
-                                        Удалить
+                                        {t.comments.delete}
                                     </>
                                 )}
                             </button>
@@ -182,7 +184,7 @@ function CommentItem({
                                         className="text-white/40 hover:text-white/70 hover:bg-white/[0.04] rounded-lg"
                                         onClick={() => { setShowReplyForm(false); setReplyContent("") }}
                                     >
-                                        Отмена
+                                        {t.comments.cancel}
                                     </Button>
                                     <Button
                                         size="sm"
@@ -190,7 +192,7 @@ function CommentItem({
                                         onClick={handleReply}
                                         disabled={submitting || !replyContent.trim()}
                                     >
-                                        {submitting ? <Loader2 className="h-3 w-3 animate-spin" /> : "Ответить"}
+                                        {submitting ? <Loader2 className="h-3 w-3 animate-spin" /> : t.comments.replyTo}
                                     </Button>
                                 </div>
                             </div>
@@ -220,6 +222,7 @@ function CommentItem({
 
 export function Comments({ postId, commentsCount }: CommentsProps) {
     const { user, isAuthenticated } = useAuth()
+    const { t } = useLanguage()
     const [comments, setComments] = useState<CommentType[]>([])
     const [loading, setLoading] = useState(true)
     const [newComment, setNewComment] = useState("")
@@ -245,12 +248,12 @@ export function Comments({ postId, commentsCount }: CommentsProps) {
         e.preventDefault()
 
         if (!isAuthenticated) {
-            toast.error("Войдите, чтобы оставить комментарий")
+            toast.error(t.validation.loginToComment)
             return
         }
 
         if (!newComment.trim()) {
-            toast.error("Комментарий не может быть пустым")
+            toast.error(t.validation.commentEmpty)
             return
         }
 
@@ -259,9 +262,9 @@ export function Comments({ postId, commentsCount }: CommentsProps) {
             const comment = await postsAPI.addComment(postId, newComment.trim())
             setComments([...comments, comment])
             setNewComment("")
-            toast.success("Комментарий добавлен!")
+            toast.success(t.validation.commentAdded)
         } catch (err) {
-            toast.error("Ошибка добавления комментария")
+            toast.error(t.validation.commentAddError)
         } finally {
             setSubmitting(false)
         }
@@ -307,7 +310,7 @@ export function Comments({ postId, commentsCount }: CommentsProps) {
         <div className="mt-6 rounded-2xl border border-white/[0.04] bg-[#0c0c0e] p-6">
             <h3 className="text-sm font-medium text-white/70 mb-5 flex items-center gap-2">
                 <MessageSquare className="h-4 w-4 text-white/40" strokeWidth={1.5} />
-                Комментарии ({commentsCount})
+                {t.comments.title} ({commentsCount})
             </h3>
 
             {/* Add Comment Form */}
@@ -320,7 +323,7 @@ export function Comments({ postId, commentsCount }: CommentsProps) {
                         </Avatar>
                         <div className="flex-1 space-y-3">
                             <Textarea
-                                placeholder="Напишите комментарий..."
+                                placeholder={t.comments.writePlaceholder}
                                 value={newComment}
                                 onChange={(e) => setNewComment(e.target.value)}
                                 className="min-h-20 resize-none bg-white/[0.03] border-white/[0.06] text-white placeholder:text-white/25 focus:border-white/[0.12] focus-visible:ring-0 rounded-xl"
@@ -338,7 +341,7 @@ export function Comments({ postId, commentsCount }: CommentsProps) {
                                     ) : (
                                         <>
                                             <Send className="h-4 w-4" strokeWidth={2} />
-                                            Отправить
+                                            {t.comments.send}
                                         </>
                                     )}
                                 </Button>
@@ -348,10 +351,10 @@ export function Comments({ postId, commentsCount }: CommentsProps) {
                 </form>
             ) : (
                 <div className="mb-6 p-4 rounded-xl bg-white/[0.02] border border-white/[0.04] text-center">
-                    <p className="text-sm text-white/40 mb-3">Войдите, чтобы оставить комментарий</p>
+                    <p className="text-sm text-white/40 mb-3">{t.comments.loginPrompt}</p>
                     <Link href="/login">
                         <Button variant="outline" size="sm" className="bg-white/[0.02] border-white/[0.06] text-white/60 hover:bg-white/[0.05] rounded-lg">
-                            Войти
+                            {t.comments.login}
                         </Button>
                     </Link>
                 </div>
@@ -364,8 +367,8 @@ export function Comments({ postId, commentsCount }: CommentsProps) {
                 </div>
             ) : comments.length === 0 ? (
                 <div className="text-center py-10">
-                    <p className="text-sm text-white/30">Пока нет комментариев</p>
-                    <p className="text-xs text-white/20 mt-1">Будьте первым!</p>
+                    <p className="text-sm text-white/30">{t.comments.noneYet}</p>
+                    <p className="text-xs text-white/20 mt-1">{t.comments.beFirst}</p>
                 </div>
             ) : (
                 <div className="space-y-3">
