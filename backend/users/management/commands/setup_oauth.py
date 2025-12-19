@@ -10,7 +10,7 @@ from allauth.socialaccount.models import SocialApp
 
 
 class Command(BaseCommand):
-    help = 'Setup OAuth SocialApp records for Google and GitHub'
+    help = 'Setup OAuth SocialApp records for Google, GitHub, GitLab, and Discord'
 
     def handle(self, *args, **options):
         # Get or create site
@@ -22,7 +22,7 @@ class Command(BaseCommand):
 
         # Google
         google_client_id = os.environ.get('GOOGLE_CLIENT_ID', '')
-        google_secret = os.environ.get('GOOGLE_CLIENT_SECRET', '')
+        google_secret = os.environ.get('GOOGLE_SECRET', '') or os.environ.get('GOOGLE_CLIENT_SECRET', '')
         
         if google_client_id:
             google_app, created = SocialApp.objects.update_or_create(
@@ -40,7 +40,7 @@ class Command(BaseCommand):
 
         # GitHub
         github_client_id = os.environ.get('GITHUB_CLIENT_ID', '')
-        github_secret = os.environ.get('GITHUB_CLIENT_SECRET', '')
+        github_secret = os.environ.get('GITHUB_SECRET', '') or os.environ.get('GITHUB_CLIENT_SECRET', '')
         
         if github_client_id:
             github_app, created = SocialApp.objects.update_or_create(
@@ -56,4 +56,41 @@ class Command(BaseCommand):
         else:
             self.stdout.write(self.style.WARNING('GITHUB_CLIENT_ID not set'))
 
+        # GitLab
+        gitlab_client_id = os.environ.get('GITLAB_CLIENT_ID', '')
+        gitlab_secret = os.environ.get('GITLAB_SECRET', '') or os.environ.get('GITLAB_CLIENT_SECRET', '')
+        
+        if gitlab_client_id:
+            gitlab_app, created = SocialApp.objects.update_or_create(
+                provider='gitlab',
+                defaults={
+                    'name': 'GitLab',
+                    'client_id': gitlab_client_id,
+                    'secret': gitlab_secret,
+                }
+            )
+            gitlab_app.sites.add(site)
+            self.stdout.write(self.style.SUCCESS(f'GitLab app configured: {gitlab_client_id[:20]}...'))
+        else:
+            self.stdout.write(self.style.WARNING('GITLAB_CLIENT_ID not set'))
+
+        # Discord
+        discord_client_id = os.environ.get('DISCORD_CLIENT_ID', '')
+        discord_secret = os.environ.get('DISCORD_SECRET', '') or os.environ.get('DISCORD_CLIENT_SECRET', '')
+        
+        if discord_client_id:
+            discord_app, created = SocialApp.objects.update_or_create(
+                provider='discord',
+                defaults={
+                    'name': 'Discord',
+                    'client_id': discord_client_id,
+                    'secret': discord_secret,
+                }
+            )
+            discord_app.sites.add(site)
+            self.stdout.write(self.style.SUCCESS(f'Discord app configured: {discord_client_id[:20]}...'))
+        else:
+            self.stdout.write(self.style.WARNING('DISCORD_CLIENT_ID not set'))
+
         self.stdout.write(self.style.SUCCESS('OAuth setup complete!'))
+

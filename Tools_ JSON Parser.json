@@ -1,0 +1,69 @@
+{
+  "name": "Tools: JSON Parser",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "text"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "98e2c2ac-abc9-4a01-8494-242a7b0dc42b",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Universal Parser V7.1 (Linter Friendly)\n\nconst inputItem = $input.first();\n\n// Если данных нет вообще, сразу выходим\nif (!inputItem || !inputItem.json) {\n    return { json: { success: false, error: \"No input data found.\" } };\n}\n\nconst rawData = inputItem.json;\nlet cleanText = null;\n\n// ЭТАП 0: НОРМАЛИЗАЦИЯ\n// --------------------\n// Используем промежуточную переменную, инициализируя её как rawData\nlet dataObj = rawData;\n\n// Попытка распарсить поле 'text', если оно есть и выглядит как JSON\nif (rawData['text'] && typeof rawData['text'] === 'string') {\n    const textVal = rawData['text'].trim();\n    if (textVal.startsWith('{')) {\n        try { dataObj = JSON.parse(textVal); } catch(e) {}\n    }\n}\n// Если сама rawData — это строка\nelse if (typeof rawData === 'string') {\n    const strVal = rawData.trim();\n    if (strVal.startsWith('{')) {\n        try { dataObj = JSON.parse(strVal); } catch(e) {}\n    }\n}\n\n// ЭТАП 1: ИЗВЛЕЧЕНИЕ ТЕКСТА\n// ------------------------\n\n// А: Проверка на Gemini API (candidates)\n// Проверяем наличие ключей безопасным способом\nif (dataObj && typeof dataObj === 'object') {\n    // Проверка Gemini\n    if (dataObj['candidates'] && Array.isArray(dataObj['candidates'])) {\n        try {\n            const candidates = dataObj['candidates'];\n            if (candidates.length > 0 && candidates[0]['content'] && candidates[0]['content']['parts']) {\n                 cleanText = candidates[0]['content']['parts'][0]['text'];\n            }\n        } catch (e) {\n            cleanText = null;\n        }\n    }\n\n    // Б: Проверка на готовый результат (Mock)\n    if (!cleanText) {\n        if (dataObj['issues'] || dataObj['commit_message']) {\n            cleanText = JSON.stringify(dataObj);\n        }\n    }\n}\n\n// В: Проверка на стандартные поля (Groq/Text)\nif (!cleanText && typeof rawData === 'object') {\n    // Безопасное чтение полей\n    const txt = rawData['text'];\n    const out = rawData['output'];\n    \n    if (txt) cleanText = typeof txt === 'string' ? txt : JSON.stringify(txt);\n    else if (out) cleanText = typeof out === 'string' ? out : JSON.stringify(out);\n}\n\n// Г: Если все еще нет текста — пробуем весь объект как строку\nif (!cleanText) {\n    cleanText = JSON.stringify(rawData);\n}\n\n// 2. ОЧИСТКА И ПАРСИНГ\n// ---------------------\n\nif (!cleanText || cleanText.length < 5) {\n    return { json: { success: false, error: \"Empty or malformed response after extraction.\" } };\n}\n\n// АГРЕССИВНАЯ ОЧИСТКА\nlet finalJsonString = cleanText.replace(/^```[a-z]*\\n/i, \"\").replace(/```$/g, \"\").trim();\n\nconst firstCurly = finalJsonString.indexOf('{');\nconst lastCurly = finalJsonString.lastIndexOf('}');\n\nif (firstCurly !== -1 && lastCurly !== -1) {\n    finalJsonString = finalJsonString.substring(firstCurly, lastCurly + 1);\n}\n\n// ЭТАП 3: ВАЛИДАЦИЯ\n// -----------------\n\ntry {\n    let parsed = JSON.parse(finalJsonString);\n\n    // Защита от двойного кодирования\n    if (typeof parsed === 'string') {\n        try { parsed = JSON.parse(parsed); } catch (e) {}\n    }\n\n    if (parsed['issues'] && Array.isArray(parsed['issues'])) {\n        return { json: { success: true, type: \"code_review\", data: parsed } };\n    }\n    \n    if (parsed['commit_message']) {\n        return { json: { success: true, type: \"commit_gen\", data: parsed } };\n    }\n    \n    throw new Error(\"JSON valid, but schema mismatch. Keys found: \" + Object.keys(parsed).join(\", \"));\n\n} catch (error) {\n    // Приведение типа ошибки для JS\n    const msg = (error && error.message) ? error.message : String(error);\n    return {\n        json: {\n            success: false,\n            error: \"Parsing Failed: \" + msg,\n            raw_input: finalJsonString\n        }\n    };\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        144,
+        0
+      ],
+      "id": "3304764b-914e-4fee-8c23-3c63434737cd",
+      "name": "Parser"
+    }
+  ],
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "text": null
+        }
+      }
+    ]
+  },
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Parser",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "4fa81739-2fb5-41d3-a4f7-0c7c222e5bfc",
+  "meta": {
+    "instanceId": "eaa32287003ad932b3615f2a067b365eb5dcc7175f022b32170ec3f42076fb8f"
+  },
+  "id": "UjLSIigUJZ0zkKaE",
+  "tags": []
+}

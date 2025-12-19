@@ -28,6 +28,32 @@ function GoogleIcon({ className }: { className?: string }) {
     )
 }
 
+// GitLab icon SVG
+function GitLabIcon({ className }: { className?: string }) {
+    return (
+        <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+            <path d="M23.955 13.587l-1.342-4.135-2.664-8.189a.455.455 0 0 0-.867 0L16.418 9.45H7.582L4.918 1.263a.455.455 0 0 0-.867 0L1.386 9.45.044 13.587a.924.924 0 0 0 .331 1.023L12 23.054l11.625-8.443a.92.92 0 0 0 .33-1.024" />
+        </svg>
+    )
+}
+
+// Discord icon SVG
+function DiscordIcon({ className }: { className?: string }) {
+    return (
+        <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+            <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z" />
+        </svg>
+    )
+}
+
+// OAuth URLs
+const oauthUrls = {
+    google: 'http://localhost:8000/accounts/google/login/',
+    github: 'http://localhost:8000/accounts/github/login/',
+    gitlab: 'http://localhost:8000/accounts/gitlab/login/',
+    discord: 'http://localhost:8000/accounts/discord/login/',
+}
+
 function RegisterPageContent() {
     const router = useRouter()
     const { register } = useAuth()
@@ -174,13 +200,13 @@ function RegisterPageContent() {
 
                         {/* Form card */}
                         <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/[0.06]">
-                            {/* OAuth */}
-                            <div className="grid grid-cols-2 gap-3 mb-5">
+                            {/* OAuth - 2x2 Grid */}
+                            <div className="grid grid-cols-2 gap-2 mb-5">
                                 <Button
                                     variant="outline"
                                     className="h-10 bg-white/[0.02] border-white/[0.06] hover:bg-white/[0.05] hover:border-white/[0.12] text-white/60 text-sm transition-all"
                                     disabled={isSubmitting}
-                                    onClick={() => window.location.href = 'http://localhost:8000/accounts/google/login/'}
+                                    onClick={() => window.location.href = oauthUrls.google}
                                 >
                                     <GoogleIcon className="h-4 w-4 mr-2 text-white/40" />
                                     Google
@@ -189,10 +215,28 @@ function RegisterPageContent() {
                                     variant="outline"
                                     className="h-10 bg-white/[0.02] border-white/[0.06] hover:bg-white/[0.05] hover:border-white/[0.12] text-white/60 text-sm transition-all"
                                     disabled={isSubmitting}
-                                    onClick={() => window.location.href = 'http://localhost:8000/accounts/github/login/'}
+                                    onClick={() => window.location.href = oauthUrls.github}
                                 >
                                     <Github className="h-4 w-4 mr-2 text-white/40" strokeWidth={1.5} />
                                     GitHub
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    className="h-10 bg-white/[0.02] border-white/[0.06] hover:bg-white/[0.05] hover:border-white/[0.12] text-white/60 text-sm transition-all"
+                                    disabled={isSubmitting}
+                                    onClick={() => window.location.href = oauthUrls.gitlab}
+                                >
+                                    <GitLabIcon className="h-4 w-4 mr-2 text-white/40" />
+                                    GitLab
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    className="h-10 bg-white/[0.02] border-white/[0.06] hover:bg-white/[0.05] hover:border-white/[0.12] text-white/60 text-sm transition-all"
+                                    disabled={isSubmitting}
+                                    onClick={() => window.location.href = oauthUrls.discord}
+                                >
+                                    <DiscordIcon className="h-4 w-4 mr-2 text-white/40" />
+                                    Discord
                                 </Button>
                             </div>
 

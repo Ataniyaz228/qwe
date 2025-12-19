@@ -1,0 +1,853 @@
+{
+  "name": "CodeReviewBot",
+  "nodes": [
+    {
+      "parameters": {
+        "jsCode": "// ============================================\n// CODE CLEANUP - FIXED: READ FROM WEBHOOK\n// ============================================\n\n// EMERGENCY DEBUG - ЧТО ВООБЩЕ ПРИХОДИТ?\nconsole.log(\"=== EMERGENCY DEBUG ===\");\nconsole.log(\"$input.all():\", JSON.stringify($input.all(), null, 2));\nconsole.log(\"$input.first():\", JSON.stringify($input.first(), null, 2));\nconsole.log(\"=======================\");\n\n// КРИТИЧНО: Читаем данные из WEBHOOK, а не из предыдущей ноды (Prompt)!\nconst webhookData = $('Input').first().json;  // ← FIX: читаем напрямую из Input webhook\nconsole.log(\"=== WEBHOOK DATA ===\");\nconsole.log(\"webhookData:\", JSON.stringify(webhookData, null, 2));\nconsole.log(\"====================\");\n\nconst bodyData = webhookData.body || webhookData;  // body или корень\n\nlet diff = bodyData.diff || \"\";\nlet filename = bodyData.filename || \"\";\nlet lang = bodyData.lang || \"unknown\";\n\n// DEBUG\nconsole.log(\"=== EXTRACTED VALUES ===\");\nconsole.log(\"diff:\", diff);\nconsole.log(\"filename:\", filename);\nconsole.log(\"lang:\", lang);\nconsole.log(\"========================\");\n\n// 2. SMART FILTER (Умный фильтр)\nlet skip = false;\nlet skipReason = \"\";\n\n// Список файлов, которые мы НЕ хотим отправлять в ИИ\nconst ignoredExtensions = [\n  \"package-lock.json\", \"yarn.lock\", \"pnpm-lock.yaml\", \"composer.lock\",\n  \".min.js\", \".min.css\", \".svg\", \".png\", \".jpg\", \".map\", \".css.map\", \".csv\"\n];\n\n// Проверка 1: Имя файла\nif (filename) {\n    const isIgnored = ignoredExtensions.some(ext => filename.endsWith(ext));\n    if (isIgnored) {\n        skip = true;\n        skipReason = \"ignored_file_type\";\n        diff = \"\"; // Очищаем, чтобы не тратить память\n    }\n}\n\n// Проверка 2: Пустота (только если еще не пропущен)\nif (!skip && (!diff || diff.trim().length === 0)) {  // ← FIX: добавили !skip\n    skip = true;\n    skipReason = \"empty_diff\";\n}\n\n// 3. ОБРЕЗКА (Truncation)\nconst MAX_CHARS = 15000;\nif (!skip && diff.length > MAX_CHARS) {\n  diff = diff.substring(0, MAX_CHARS) + \"\\n\\n...[Diff truncated to save tokens]\";\n}\n\n// DEBUG: Final values\nconsole.log(\"=== RESULT ===\");\nconsole.log(\"skip:\", skip, \"(type:\", typeof skip, \")\");\nconsole.log(\"skip_reason:\", skipReason);\nconsole.log(\"Will process:\", !skip);\nconsole.log(\"===============\");\n\n// 4. ВОЗВРАТ\nreturn {\n  json: {\n    clean_diff: diff,\n    filename: filename,\n    lang: lang,\n    skip: skip,                // boolean: true или false\n    skip_reason: skipReason,\n    model_used: \"Google Vertex\"\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -352,
+        128
+      ],
+      "id": "c2c6082b-394c-4765-8582-c28de2cf7ee4",
+      "name": "Code cleanup"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "code-review",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -800,
+        208
+      ],
+      "id": "d84c8493-e050-496c-a7b7-0b8878e7f570",
+      "name": "Input",
+      "webhookId": "23ca2034-f901-44ae-ae39-56b14d251c44"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        896,
+        240
+      ],
+      "id": "835115e7-0407-4aa9-9867-41164628f01f",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "593150ba-3f55-447b-9bfd-bd54bc70a9b4",
+              "name": "=system_instruction",
+              "value": "=// Пытаемся получить имя файла из вебхука...\nconst filename = $('Webhook').first().json.body.filename || \"unknown file\";\n\nreturn `You are a Senior Security Auditor and Code Reviewer.\nCONTEXT: Reviewing file \"${filename}\".\n\nCRITICAL RULES (NON-NEGOTIABLE):\n1. HARDCODE DETECTION: Search for ANY string literal that resembles a password, key, or secret (e.g., '123456', 'ADMIN_PASS').\n2. IMMEDIATE ACTION: If a hardcoded secret is found, the issue MUST be marked \"critical\" and MUST be included in the 'issues' array. Do NOT ignore it.\n3. Output ONLY valid JSON.\n4. IF THE INPUT IS EMPTY OR MISSING: Return exactly {\"issues\": []} and NOTHING else.\n\nReturn your response following the mandated JSON Schema provided in the API call's configuration.`;",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -496,
+        128
+      ],
+      "id": "38ca7b45-fc62-4b81-81bf-51b69b3c1aa7",
+      "name": "Prompt"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2d150622-62ca-4e44-9d60-d50656148e01",
+              "name": "error",
+              "value": "Critical Failure: All AI models failed to generate valid JSON.",
+              "type": "string"
+            },
+            {
+              "id": "5b0c715f-a05d-4828-91e8-ed4375cd1903",
+              "name": "details",
+              "value": "={{ $json.error }}",
+              "type": "string"
+            },
+            {
+              "id": "b9361184-06ee-43c3-a0d2-923c8d04ad43",
+              "name": "timestamp",
+              "value": "={{ new Date().toISOString() }}",
+              "type": "string"
+            },
+            {
+              "id": "e0acc8b9-8ed6-4e53-9b87-b3684e854f32",
+              "name": "model_used",
+              "value": "ALL FAILED",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        560,
+        368
+      ],
+      "id": "bdf09c76-92fe-4e3d-a63a-8f2aa58a57c8",
+      "name": "Final Error"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "=UjLSIigUJZ0zkKaE",
+          "mode": "id",
+          "cachedResultUrl": "/workflow/=UjLSIigUJZ0zkKaE"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "text": "={{ $json.text }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "text",
+              "displayName": "text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "mode": "each",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        240,
+        320
+      ],
+      "id": "fbea0959-ac94-4a42-896e-3533b06dd354",
+      "name": "Call Groq",
+      "alwaysOutputData": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.clean_diff }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "={{ $json.system_instruction }}"
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        -32,
+        320
+      ],
+      "id": "55e09e1c-20af-4312-bf64-830d6f3c046d",
+      "name": "Groq Chain"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cba93005-f923-42bd-9051-52709ab2ca90",
+              "leftValue": "={{ $json.success }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        688,
+        80
+      ],
+      "id": "eea6bc5b-8e15-4fbf-a1b3-46322a74c787",
+      "name": "Vertex succes"
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "operation": "create",
+        "projectId": "=gen-lang-client-0196159966",
+        "database": "projectdb",
+        "collection": "logs_code_review",
+        "columns": "={\n  \"timestamp\": \"{{ new Date().toISOString() }}\",\n  \"status\": \"{{ $json.success ? 'SUCCESS' : 'ERROR' }}\",\n  \"details\": \"{{ $json.success ? 'Review generated successfully' : ($json.error || $json.message || 'Unknown error') }}\",\n  \"model\": \"{{ $json.model_used || 'Unknown' }}\",\n  \"failed_node\": \"{{ $json.success ? '-' : ($json.failed_provider || 'Check Logs') }}\",\n  \"input_preview\": \"{{ $json.clean_diff ? $json.clean_diff.substring(0, 100) : 'No diff data' }}\"\n}"
+      },
+      "type": "n8n-nodes-base.googleFirebaseCloudFirestore",
+      "typeVersion": 1.1,
+      "position": [
+        1056,
+        320
+      ],
+      "id": "4e656643-bd70-4387-a9d4-7147c8564737",
+      "name": "Firestore Logging",
+      "credentials": {
+        "googleApi": {
+          "id": "SQwCT6KhQpd8TcPM",
+          "name": "Google Service Account account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7bbd656c-5708-476c-8b85-a1f5d2bfa5ed",
+              "leftValue": "={{ $json.headers['x-auth-token'] }}",
+              "rightValue": "=/dek0omQpvJLWLRPz3ataV6sM/Gu3f9bAew8wNWLZto",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -656,
+        208
+      ],
+      "id": "7a314a42-5b8f-4a76-bf55-596bddaec0cf",
+      "name": "Auth"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"success\": false,\n  \"error\": \"Access Denied: Invalid Token\"\n}",
+        "options": {
+          "responseCode": 403
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        -496,
+        288
+      ],
+      "id": "6a95447a-4308-4fae-a600-0c8cdecae302",
+      "name": "Auth fail"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "64d1872a-df75-4f04-af3b-8e95f11b2eec",
+              "leftValue": "={{ $json.success }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        400,
+        320
+      ],
+      "id": "53ecc011-d92b-4ce0-8207-78297b9b0fc4",
+      "name": "Groq succes"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Этот код корректно возвращает объект JSON Schema\nreturn {\n  json: {\n    schema: {\n      \"type\": \"object\",\n      \"properties\": {\n        \"issues\": {\n          \"type\": \"array\",\n          \"description\": \"A list of identified code review issues.\",\n          \"items\": {\n            \"type\": \"object\",\n            \"properties\": {\n              \"file\": { \"type\": \"string\" },\n              \"line\": { \"type\": \"integer\" },\n              \"severity\": { \"type\": \"string\", \"enum\": [\"critical\", \"warning\", \"info\"] },\n              \"message\": { \"type\": \"string\" },\n              \"suggestion\": { \"type\": \"string\" }\n            },\n            \"required\": [\"file\", \"line\", \"severity\", \"message\"]\n          }\n        }\n      },\n      \"required\": [\"issues\"]\n    }\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "d36292e5-5913-479a-93df-7cf828f4c422",
+      "name": "Code Review Schema"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Получаем данные из предыдущих узлов\nconst promptData = $('Prompt').first().json;\nconst cleanData = $('Code cleanup').first().json;\nconst schemaData = $('Code Review Schema').first().json; \n\n// DEBUG: посмотрим что приходит\n\n\nconsole.log(\"=== PREPARE GEMINI DEBUG ===\");\nconsole.log(\"promptData:\", promptData);\nconsole.log(\"cleanData:\", cleanData);\nconsole.log(\"clean_diff:\", cleanData.clean_diff);\nconsole.log(\"===========================\");\n\n// 1. КОНСОЛИДИРУЕМ ПРОМПТЫ И КОД\nconst systemInstruction = promptData.system_instruction || \"\";\nconst codeToReview = cleanData.clean_diff || \"\";\n\n// Проверка: если код пустой - это ошибка!\nif (!codeToReview || codeToReview.trim().length === 0) {\n    throw new Error(\"CODE TO REVIEW IS EMPTY! Check Code cleanup output.\");\n}\n\nconst combinedPrompt = systemInstruction + \n                       \"\\n\\n--- CODE TO REVIEW ---\\n\\n\" + \n                       codeToReview;\n\n// 2. СОЗДАЕМ ФИНАЛЬНЫЙ API PAYLOAD\nconst finalApiPayload = {\n    \"contents\": [\n        {\n            \"role\": \"user\",\n            \"parts\": [\n                { \"text\": combinedPrompt }\n            ]\n        }\n    ],\n    \"generationConfig\": {  // ← FIX: было \"config\", должно быть \"generationConfig\"\n        \"temperature\": 0.0,\n        \"responseMimeType\": \"application/json\",\n        \"responseSchema\": schemaData.schema \n    }\n};\n\nconsole.log(\"=== FINAL PAYLOAD TO SEND ===\");\nconsole.log(JSON.stringify(finalApiPayload, null, 2));\nconsole.log(\"============================\");\n\n// 3. ВОЗВРАЩАЕМ PAYLOAD\nreturn finalApiPayload;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        160,
+        0
+      ],
+      "id": "d402cbf8-3f91-48cf-9884-de7ebf3abdc9",
+      "name": "Prepare Gemini body"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "=UjLSIigUJZ0zkKaE",
+          "cachedResultName": "=UjLSIigUJZ0zkKaE"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "text": "={{ JSON.stringify($json) }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "text",
+              "displayName": "text",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "mode": "each",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        512,
+        80
+      ],
+      "id": "4f526c7e-bb70-4182-aebf-305400d3516a",
+      "name": "Call Vertex",
+      "alwaysOutputData": true,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\n\nreturn {\n  json: {\n    issues: [],\n    _meta: {\n      skipped: true,\n      skip_reason: input.skip_reason || \"unknown\",\n      filename: input.filename || \"unknown\"\n    }\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        160,
+        160
+      ],
+      "id": "ae668110-c656-4f80-bd8d-72494b1bfbce",
+      "name": "Mock Empty Response"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "=4rMH8ueh5NusvmUe"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "mode": "each",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        1056,
+        176
+      ],
+      "id": "2e9dc7b3-c761-4a98-9898-c7c9cb7cc62d",
+      "name": "Call Formatter",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1200,
+        176
+      ],
+      "id": "eb94a9b3-2b68-412b-b209-49180b59de60",
+      "name": "Output"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "=application/json",
+        "body": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        320,
+        0
+      ],
+      "id": "73f334a9-b75a-426a-9c28-a82531497a71",
+      "name": "HTTP Gemini",
+      "credentials": {
+        "googleApi": {
+          "id": "SQwCT6KhQpd8TcPM",
+          "name": "Google Service Account account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "e8157fad-dae5-40da-9ed5-13c7d2f00094",
+              "leftValue": "={{ $json.clean_diff.length }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -176,
+        80
+      ],
+      "id": "3b0645db-589c-4ac3-9ce2-6b7b4bb178de",
+      "name": "Diff check"
+    },
+    {
+      "parameters": {
+        "chatId": "=1101597449",
+        "text": "=🔥 CRITICAL FAILURE: CodeReviewBot Down\n\nError: {{ $json.error }}\nDetails: {{ $json.details || \"Unknown error\" }}\nFailed Provider: {{ $json.failed_provider }}\nTimestamp: {{ new Date().toISOString() }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        736,
+        416
+      ],
+      "id": "b88aedc1-9e52-467b-bb19-53e14eb12f31",
+      "name": "Send a text message",
+      "webhookId": "baf389d1-5e4d-4a03-9241-2b9f7ee1a85f",
+      "credentials": {
+        "telegramApi": {
+          "id": "PntfHXpQlQIOaHZr",
+          "name": "Telegram account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. БЕЗОПАСНОЕ ПОЛУЧЕНИЕ ДАННЫХ\nconst cleanItem = $('Code cleanup').first();\nconst cleanData = cleanItem ? cleanItem.json : {};\n\nconst promptItem = $('Prompt').first();\nconst promptData = promptItem ? promptItem.json : {};\n\n// 2. ИЗВЛЕЧЕНИЕ ПЕРЕМЕННЫХ\nconst diff = cleanData.clean_diff || \"\";\nconst baseInstruction = promptData.system_instruction || \"You are a code reviewer. Output JSON.\";\n\n// 3. PROMPT ENGINEERING (Llama 3 Hardcore Mode)\n// Добавляем \"Пример\" (Example), чтобы модель работала по шаблону\nconst strictInstruction = baseInstruction + \n    \"\\n\\n🛑 SYSTEM OVERRIDE - CRITICAL FORMATTING RULES:\\n\" +\n    \"1. YOU ARE A JSON GENERATOR, NOT A CHATBOT. DO NOT EXPLAIN.\\n\" +\n    \"2. OUTPUT RAW JSON ONLY. NO MARKDOWN. START RESPONSE WITH '{'.\\n\" +\n    \"3. REQUIRED JSON FORMAT:\\n\" +\n    '{\"issues\": [{\"file\": \"filename\", \"line\": 1, \"severity\": \"critical\", \"message\": \"text\", \"suggestion\": \"code\"}]}\\n' +\n    \"\\n✅ EXAMPLE OF CORRECT RESPONSE:\\n\" +\n    '{\"issues\": [{\"file\": \"auth.js\", \"line\": 5, \"severity\": \"critical\", \"message\": \"Hardcoded password detected\", \"suggestion\": \"Use process.env.PASSWORD\"}]}';\n\n// 4. ВОЗВРАТ\nreturn {\n    json: {\n        clean_diff: diff,\n        system_instruction: strictInstruction,\n        model_used: \"Groq Turbo Backup\" \n    }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -160,
+        320
+      ],
+      "id": "3616df83-9387-47a0-80e2-b7737967c86c",
+      "name": "Restore for Groq"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "=llama-3.1-8b-instant",
+          "mode": "id"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -32,
+        464
+      ],
+      "id": "5e8e8426-033b-4420-9523-41c4f8272f4b",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "bmHsDAH0KlcnWpN3",
+          "name": "OpenAi account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Code cleanup": {
+      "main": [
+        [
+          {
+            "node": "Diff check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Input": {
+      "main": [
+        [
+          {
+            "node": "Auth",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Firestore Logging",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Call Formatter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prompt": {
+      "main": [
+        [
+          {
+            "node": "Code cleanup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Final Error": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          },
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chain": {
+      "main": [
+        [
+          {
+            "node": "Call Groq",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Groq": {
+      "main": [
+        [
+          {
+            "node": "Groq succes",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Groq succes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Vertex succes": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Restore for Groq",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Auth": {
+      "main": [
+        [
+          {
+            "node": "Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Auth fail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq succes": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Final Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code Review Schema": {
+      "main": [
+        [
+          {
+            "node": "Prepare Gemini body",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Gemini body": {
+      "main": [
+        [
+          {
+            "node": "HTTP Gemini",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Vertex": {
+      "main": [
+        [
+          {
+            "node": "Vertex succes",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Vertex succes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mock Empty Response": {
+      "main": [
+        [
+          {
+            "node": "Call Vertex",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Formatter": {
+      "main": [
+        [
+          {
+            "node": "Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Gemini": {
+      "main": [
+        [
+          {
+            "node": "Call Vertex",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Diff check": {
+      "main": [
+        [
+          {
+            "node": "Code Review Schema",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mock Empty Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Restore for Groq": {
+      "main": [
+        [
+          {
+            "node": "Groq Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Groq Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "31590a0f-d228-4b5f-930f-c697220e3f43",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "eaa32287003ad932b3615f2a067b365eb5dcc7175f022b32170ec3f42076fb8f"
+  },
+  "id": "8nyLhx9iowcwLg6r",
+  "tags": []
+}

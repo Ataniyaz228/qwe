@@ -7,6 +7,7 @@ import { Navbar } from "@/components/navbar"
 import { Sidebar } from "@/components/sidebar"
 import { Comments } from "@/components/comments"
 import { CodeHighlight } from "@/components/code-highlight"
+import { CodeReviewWidget } from "@/components/code-review-widget"
 import { usePost } from "@/hooks/usePosts"
 import { useAuth } from "@/contexts/AuthContext"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -369,9 +370,23 @@ export default function PostPage() {
               </div>
             </article>
 
+            {/* AI Code Review Widget */}
+            {post.code && (
+              <div className={cn(
+                "mt-6 transition-all duration-500 delay-150",
+                mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+              )}>
+                <CodeReviewWidget
+                  code={post.code}
+                  language={post.language}
+                  title={post.title}
+                />
+              </div>
+            )}
+
             {/* Comments Section */}
             <div className={cn(
-              "transition-all duration-500 delay-200",
+              "mt-6 transition-all duration-500 delay-200",
               mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
             )}>
               <Comments postId={postId} commentsCount={post.comments_count} />

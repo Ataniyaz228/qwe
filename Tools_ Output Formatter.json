@@ -1,0 +1,56 @@
+{
+  "name": "Tools: Output Formatter",
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "3e99fd3d-b60a-46c1-86bc-fe4f62ec5f39",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Исправленное получение данных\nconst item = $input.item;\nconst json = item.json;\nlet md = \"\";\n\n// === ЛОГИКА ДЛЯ CODE REVIEW ===\nif (json.type === \"code_review\") {\n    const data = json.data || {};\n    \n    // 1. Если файл был пропущен (Smart Filter)\n    if (data._meta && data._meta.skipped) {\n        md = `⚪ **Skipped:** Analysis bypassed.\\n**Reason:** \\`${data._meta.skip_reason}\\`\\n**File:** \\`${data._meta.filename}\\``;\n    }\n    // 2. Если ошибок нет\n    else if (!data.issues || data.issues.length === 0) {\n        md = \"✅ **Code Review Passed:** No issues found. Good job!\";\n    }\n    // 3. Если есть ошибки\n    else {\n        md = \"### 🚨 Code Review Report\\n\\n\";\n        data.issues.forEach(i => {\n            let icon = '🔵'; \n            if (i.severity === 'critical') icon = '🔴';\n            if (i.severity === 'warning') icon = '🟡';\n            \n            md += `**${icon} ${i.severity.toUpperCase()}**`;\n            if (i.line) md += ` at line \\`${i.line}\\``;\n            md += `\\n`;\n            \n            md += `> ${i.message}\\n`;\n            \n            if (i.suggestion) {\n                md += `**Fix:** \\`${i.suggestion}\\`\\n`;\n            }\n            md += \"---\\n\";\n        });\n    }\n}\n\n// === ЛОГИКА ДЛЯ COMMIT GEN ===\nelse if (json.type === \"commit_gen\") {\n    const data = json.data || {};\n    const msg = data.commit_message || \"No message generated\";\n    \n    md = \"### 📝 Generated Commit\\n\";\n    md += \"```git\\n\" + msg + \"\\n```\\n\";\n    md += \"_(Click to copy)_\";\n}\n\n// === ЛОГИКА ДЛЯ ОШИБОК ===\nelse if (json.success === false) {\n    md = `❌ **System Error**\\n\\`${json.error}\\``;\n}\n\n// Возвращаем результат\nreturn {\n    json: {\n        ...json,\n        markdown: md\n    }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        144,
+        0
+      ],
+      "id": "82a59c49-4377-4cba-abe2-b1a536566618",
+      "name": "Code in JavaScript"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "0241b422-0a33-40d5-8522-38bd45394a72",
+  "meta": {
+    "instanceId": "eaa32287003ad932b3615f2a067b365eb5dcc7175f022b32170ec3f42076fb8f"
+  },
+  "id": "4rMH8ueh5NusvmUe",
+  "tags": []
+}

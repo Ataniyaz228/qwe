@@ -52,15 +52,18 @@ class OAuthInitiateView(View):
     
     def get(self, request, provider):
         # Возвращаем URL для редиректа
-        if provider == 'google':
-            oauth_url = '/api/auth/social/google/login/'
-        elif provider == 'github':
-            oauth_url = '/api/auth/social/github/login/'
-        else:
+        oauth_urls = {
+            'google': '/api/auth/social/google/login/',
+            'github': '/api/auth/social/github/login/',
+            'gitlab': '/api/auth/social/gitlab/login/',
+            'discord': '/api/auth/social/discord/login/',
+        }
+        
+        if provider not in oauth_urls:
             return JsonResponse({'error': 'Unknown provider'}, status=400)
         
         return JsonResponse({
-            'url': f"{request.scheme}://{request.get_host()}{oauth_url}",
+            'url': f"{request.scheme}://{request.get_host()}{oauth_urls[provider]}",
             'provider': provider
         })
 
@@ -91,7 +94,7 @@ class OAuthUserInfoView(APIView):
         
         return Response({
             'connected_accounts': accounts,
-            'providers': ['google', 'github']
+            'providers': ['google', 'github', 'gitlab', 'discord']
         })
     
     def delete(self, request):
@@ -104,7 +107,7 @@ class OAuthUserInfoView(APIView):
         if not provider:
             return Response({'error': 'Provider is required'}, status=400)
         
-        if provider not in ['google', 'github']:
+        if provider not in ['google', 'github', 'gitlab', 'discord']:
             return Response({'error': 'Invalid provider'}, status=400)
         
         # Проверяем есть ли у пользователя пароль (чтобы он мог войти без OAuth)

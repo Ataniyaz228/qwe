@@ -51,6 +51,8 @@ INSTALLED_APPS = [
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
     'allauth.socialaccount.providers.github',
+    'allauth.socialaccount.providers.gitlab',
+    'allauth.socialaccount.providers.discord',
     'dj_rest_auth',
     'dj_rest_auth.registration',
     
@@ -277,6 +279,12 @@ SOCIALACCOUNT_PROVIDERS = {
     },
     'github': {
         'SCOPE': ['user:email', 'read:user'],
+    },
+    'gitlab': {
+        'SCOPE': ['read_user', 'openid', 'email'],
+    },
+    'discord': {
+        'SCOPE': ['identify', 'email'],
     },
 }
 
